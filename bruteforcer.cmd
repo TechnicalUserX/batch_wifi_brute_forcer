@@ -1,4 +1,13 @@
 @echo off
+        if not exist BF_Files\ (
+	echo The BF_Files folder could not be found.
+	echo Without it, the program cannot run.
+	echo It may have been renamed, moved or deleted.
+	echo To fix this issue, name the folder back, move it back or reinstall the program from GitHub.
+	pause
+	exit
+	)
+	
 	set allowed_char_list="ABCDEFGHIJKLMNOPRSTUVYZWXQabcdefghijklmnoprstuvyzwxq0123456789-_"
 	title The WI-FI Brute Forcer - Developed By TUX
 	set /a attempt=1
@@ -100,15 +109,6 @@
 	
 	
 	
-	
-	
-	
-
-	
-	
-	
-	
-	
 	:main
 	set mainmenuchoice=
 	cls
@@ -190,7 +190,7 @@
 		echo  - interface        : Open Interface Management
 		echo  - attack           : Attacks on selected WI-FI
 		echo.
-		echo  For more informaton, please read "readme.txt".
+		echo  For more informaton, please read "README.md".
 		echo.
 		echo.
 		echo  Other projects of TUX:

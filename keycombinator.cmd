@@ -1,4 +1,12 @@
 @echo off
+ if not exist BF_Files\ (
+	echo The BF_Files folder could not be found.
+	echo Without it, the program cannot run.
+	echo It may have been renamed, moved or deleted.
+	echo To fix this issue, name the folder back, move it back or reinstall the program from GitHub.
+	pause
+	exit
+	)
 setlocal enabledelayedexpansion
 
 	cd BF_Files
