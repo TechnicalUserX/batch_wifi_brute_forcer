@@ -14,11 +14,11 @@
 
 ## About Brute Forcer
 	
-- This program performs an "Online Attack" to the target WI-FI.
+- This program performs an "Online Attack" on the target WI-FI.
 - It's speed depends on your hardware.
 - Not 100% accurate because it's a brute force attack.
 - A big password file isn't included, you can create it with "keycombinator.cmd" or
-you can download it from internet and rename it "passlist.txt" and paste it inside "BF_Files"
+you can download it from the internet and rename it "passlist.txt" and paste it inside "BF_Files"
 - Because Online Attack is so slow, big password lists are not recommended.
 - Your attack results are being written to "WIFI_Report.txt" inside "BF_Files"
 - Please, do not touch other files, it may cause malfunction!
@@ -29,7 +29,7 @@ You have to rename it to "passlist.txt"
 ### Unsupported Char
 
 - This means that the target SSID includes an unsupported character by Command Prompt
-- To prevent program from malfunctioning, those SSIDs are banned.
+- To prevent the program from malfunctioning, those SSIDs are banned.
 
 
 ### Deleting Profile
