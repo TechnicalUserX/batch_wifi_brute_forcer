@@ -16,10 +16,10 @@
 	
 - This program performs an "Online Attack" to the target WI-FI.
 - It's speed depends on your hardware.
-- Not % 100 accurate because it's a brute force attack.
+- Not 100% accurate because it's a brute force attack.
 - A big password file isn't included, you can create it with "keycombinator.cmd" or
 you can download it from internet and rename it "passlist.txt" and paste it inside "BF_Files"
-- Because of Online Attack is so slow, big password lists are not recommended.
+- Because Online Attack is so slow, big password lists are not recommended.
 - Your attack results are being written to "WIFI_Report.txt" inside "BF_Files"
 - Please, do not touch other files, it may cause malfunction!
 - "keycombinator.cmd" creates a list inside BF_Files with the name "passlist_raw.txt".
@@ -28,8 +28,8 @@ You have to rename it to "passlist.txt"
 
 ### Unsupported Char
 
-- This means target SSID includes unsuported character by Command Prompt
-- To prevent program to malfunction, those SSIDs are banned.
+- This means that the target SSID includes an unsupported character by Command Prompt
+- To prevent program from malfunctioning, those SSIDs are banned.
 
 
 ### Deleting Profile
@@ -43,7 +43,7 @@ of a network you have already connected to, the program deletes your previous pr
 
 - MAC Spoofing is using a different MAC Address rather than the original one which your interface has.
 - It helps you to stay anonymous while attacking.
-- If you accidentaly disable your wi-fi interface, open cmd and type this
+- If you accidentally disable your wi-fi interface, open cmd and type this
 netsh interface set interface name="Wi-Fi" admin=Enabled
 		
 - If you have multiple Wi-Fi interfaces, it may be Wi-Fi 2 or etc. (Wi-Fi 3,4,5...)
