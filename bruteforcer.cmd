@@ -182,10 +182,10 @@
 	if !mainmenuchoice!==help (
 		cls
 		echo.
-		call colorchar.exe /0b " Help Page"
+		call colorchar.exe /0b " Help "
 		echo.
 		echo.
-		echo  - help             : Prints this page
+		echo  - help             : Displays this area
 		echo  - wifiscan         : Performs a WI-FI scan
 		echo  - interface        : Open Interface Management
 		echo  - attack           : Attacks on selected WI-FI
@@ -196,7 +196,7 @@
 		echo  Other projects of TUX:
 		echo  "https://www.technicaluserx.wordpress.com"
 		echo.
-		echo  This project's UI has maden possible with TheBATeam group plugins.
+		echo  This project's UI was made possible with TheBATeam group plugins.
 		echo  TheBATeam project is ended, website is closed
 		echo  New address is "https://www.batch-man.com/"
 		echo.
@@ -234,7 +234,7 @@
 	set /a attempt=1
 	
 		if "!targetwifi!"=="No WI-FI Selected" (
-			call colorchar.exe /0c " Please select a WI-FI..."
+			call colorchar.exe /0c " Please select a target WI-FI..."
 			echo.
 			echo.
 			echo  Press any key to continue...
@@ -261,7 +261,7 @@
 		echo.
 		call colorchar.exe /0e " WARNING"
 		echo.
-		echo  If you connected a network with this same name "!targetwifi!",
+		echo  If you connected to a network with the same name as this: "!targetwifi!",
 		echo  its profile will be deleted.
 		echo.
 		echo.
@@ -455,7 +455,7 @@
 		call colorchar.exe /0e "!interface_description!"
 		call colorchar.exe /0f " for scanning..."
 		echo.
-		echo  Low Signal Strength WI-FIs are not recommended
+		echo  Low Signal Strength networks are not recommended
 		echo.
 		for /f "tokens=1-4" %%a in ('netsh wlan show networks mode^=bssid interface^="!interface_id!" ') do (
 
@@ -1150,7 +1150,7 @@
 	echo.
 	echo.
 	echo  [--------------------------------------------------------------------------------------------------------------------------]
-	call colorchar.exe /0b "    Interafe Management Commands"
+	call colorchar.exe /0b "    Interface Management Commands"
 	echo.
 	echo.  
 	echo    - select interface              : Choose another interface
@@ -1221,7 +1221,7 @@
 	
 	if "!privilege_level!"=="local" (
 		echo.
-		call colorchar.exe /0c " Administrator Privileges required to use this feature..."
+		call colorchar.exe /0c " Administrator Privileges are required to use this feature..."
 		timeout /t 3 >nul
 		cls
 		set interfacemanagementchoice=
