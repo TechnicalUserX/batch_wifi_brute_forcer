@@ -182,7 +182,7 @@
 	if !mainmenuchoice!==help (
 		cls
 		echo.
-		call colorchar.exe /0b " Help "
+		call colorchar.exe /0b " Commands "
 		echo.
 		echo.
 		echo  - help             : Displays this area
@@ -197,7 +197,7 @@
 		echo  "https://www.technicaluserx.wordpress.com"
 		echo.
 		echo  This project's UI was made possible with TheBATeam group plugins.
-		echo  TheBATeam project is ended, website is closed
+		echo  TheBATeam project has ended, the website is closed
 		echo  New address is "https://www.batch-man.com/"
 		echo.
 		echo  Press any key to continue...
