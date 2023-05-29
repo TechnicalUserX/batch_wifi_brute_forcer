@@ -21,7 +21,7 @@
 you can download it from the internet and rename it "passlist.txt" and paste it inside "BF_Files"
 - Because Online Attack is so slow, big password lists are not recommended.
 - Your attack results are being written to "WIFI_Report.txt" inside "BF_Files"
-- Please, do not touch other files, it may cause malfunction!
+- Please, do not touch other files, it may cause malfunctioning!
 - "keycombinator.cmd" creates a list inside BF_Files with the name "passlist_raw.txt".
 You have to rename it to "passlist.txt"
 ## Help with errors
