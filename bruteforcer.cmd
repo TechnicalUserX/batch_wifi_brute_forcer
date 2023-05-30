@@ -69,7 +69,7 @@
 	call colorchar.exe /0f ")"
 	echo.
 	echo.
-	echo  Making !interface_1_description! as default Interface...
+	echo  Making !interface_1_description! the default Interface...
 	set interface_id=!interface_1_id!
 	set interface_description=!interface_1_description!
 	set interface_mac=!interface_1_mac!
