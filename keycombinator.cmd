@@ -140,7 +140,7 @@ setlocal enabledelayedexpansion
 	echo.
 	echo  [==================================================]
 	echo.
-	echo  What is the limit length for creating passwords? (8-?)
+	echo  What will be the length limit for creating passwords? (8-?)
 	call :userinput
 	set /p until_where=
 	
@@ -155,7 +155,7 @@ setlocal enabledelayedexpansion
 	
 	
 	echo.
-	echo  How many passwords will generated per length?
+	echo  How many passwords will be generated per length?
 	call :userinput
 	set /p how_many_passwords_per_length=
 	cls
@@ -213,7 +213,7 @@ setlocal enabledelayedexpansion
 	cls
 	echo.
 	echo  [==========================]
-	call colorchar.exe /0a "  Creating Of List Complete"
+	call colorchar.exe /0a "  List Creation Complete"
 	echo.
 	echo   Passwords generated: !passwords_generated!
 	echo  [==========================]
@@ -221,8 +221,4 @@ setlocal enabledelayedexpansion
 	echo  Press any key to continue...
 	pause >nul
 	exit
-	
-
-	
-	
 	
