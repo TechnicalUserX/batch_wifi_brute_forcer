@@ -1,12 +1,4 @@
 @echo off
-        if not exist BF_Files\ (
-	echo The BF_Files folder could not be found.
-	echo Without it, the program cannot run.
-	echo It may have been renamed, moved or deleted.
-	echo To fix this issue, name the folder back, move it back or reinstall the program from GitHub.
-	pause
-	exit
-	)
 	
 	set allowed_char_list="ABCDEFGHIJKLMNOPRSTUVYZWXQabcdefghijklmnoprstuvyzwxq0123456789-_"
 	title The WI-FI Brute Forcer - Developed By TUX
@@ -33,19 +25,35 @@
 	if %errorLevel% == 0 (
 		set privilege_level=administrator
 		cd !current_directory!
-		cd BF_Files
-		del attempt.xml >nul
-		del infogate.xml >nul
-		cls
-
+		if not exist BF_Files\ (
+	              echo The BF_Files folder could not be found.
+	              echo Without it, the program cannot run.
+	              echo It may have been renamed, moved or deleted.
+	              echo To fix this issue, name the folder back, move it back or reinstall the program from GitHub.
+	              pause
+	              exit
+	        )else (
+	              cd BF_Files
+		      del attempt.xml >nul
+		      del infogate.xml >nul
+		      cls
+		)
 	)else (
 		set privilege_level=local
-		cd BF_Files
-		del attempt.xml >nul
-		del infogate.xml >nul
-		cls
+		if not exist BF_Files\ (
+	              echo The BF_Files folder could not be found.
+	              echo Without it, the program cannot run.
+	              echo It may have been renamed, moved or deleted.
+	              echo To fix this issue, name the folder back, move it back or reinstall the program from GitHub.
+	              pause
+	              exit
+	        )else (
+	              cd BF_Files
+		      del attempt.xml >nul
+		      del infogate.xml >nul
+		      cls
+		)
 	)
-	
 	
 	
 	
@@ -510,7 +518,7 @@
 		
 		echo.
 		echo.
-		call colorchar.exe /0b " Please choice a wifi or cancel(1-!keynumber!)"
+		call colorchar.exe /0b " Please choose a network or cancel(1-!keynumber!)"
 		echo.
 		set choice=
 		call colorchar.exe /0e " wifi"
