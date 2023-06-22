@@ -24,7 +24,7 @@
 	net session >nul 2>&1
 	if %errorLevel% == 0 (
 		set privilege_level=administrator
-		cd !current_directory!
+		cd /d "%~dp0"
 		if not exist BF_Files\ (
 	              echo The BF_Files folder could not be found.
 	              echo Without it, the program cannot run.
