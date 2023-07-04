@@ -9,7 +9,7 @@
 - help             : Displays this area
 - wifiscan         : Performs a WI-FI scan
 - interface	   : Interface management
-- attack           : Attacks on selected WI-FI
+- attack           : Attacks selected WI-FI
 
 
 ## About Brute Forcer
