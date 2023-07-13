@@ -42,7 +42,7 @@ If an attack was successful, the result is automatically written to `result.txt`
 
 
 ## help screen
-```batchfile
+```txt
 Commands
 
  - help             : Displays this page
