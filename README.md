@@ -29,3 +29,15 @@ to delete the profile associated with the SSID if you have connected to it befor
 It means you will lose the password you entered while connecting to that SSID before.
 Save it before using the attack.
 
+## Limitations
+- This program is created for Windows 10. Since some commands may differ in terms of output between Windows versions,
+it is not expected to work on previous versions.
+
+- Speed is significantly slow due to its nature.
+
+- Cannot attack hidden networks.
+
+## Result file
+If an attack was successful, the result is automatically written to `result.txt`.
+
+
