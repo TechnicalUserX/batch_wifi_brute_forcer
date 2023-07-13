@@ -41,3 +41,22 @@ it is not expected to work on previous versions.
 If an attack was successful, the result is automatically written to `result.txt`.
 
 
+## help screen
+```batchfile
+Commands
+
+ - help             : Displays this page
+ - wordlist         : Provide a wordlist file  
+ - scan             : Performs a WI-FI scan    
+ - interface        : Open Interface Management
+ - attack           : Attacks on selected WI-FI
+
+ For more informaton, please read "README.md". 
+
+ Other projects of TUX:
+ https://www.technicaluserx.wordpress.com      
+ https://github.com/TechnicalUserX
+
+
+Press any key to continue...
+```
