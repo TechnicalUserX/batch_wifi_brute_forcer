@@ -41,7 +41,7 @@ it is not expected to work on previous versions.
 If an attack was successful, the result is automatically written to `result.txt`.
 
 
-## help screen
+## Help screen
 ```txt
 Commands
 
