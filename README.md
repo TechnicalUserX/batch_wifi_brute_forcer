@@ -32,6 +32,7 @@ Save it before using the attack.
 ## Limitations
 - This program is created for Windows 10. Since some commands may differ in terms of output between Windows versions,
 it is not expected to work on previous versions.
+> Works on Windows 11 too.
 
 - Speed is significantly slow due to its nature.
 
