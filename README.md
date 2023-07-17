@@ -50,7 +50,7 @@ Commands
  - wordlist         : Provide a wordlist file  
  - scan             : Performs a WI-FI scan    
  - interface        : Open Interface Management
- - attack           : Attacks on selected WI-FI
+ - attack           : Attacks selected WI-FI
 
  For more informaton, please read "README.md". 
 
