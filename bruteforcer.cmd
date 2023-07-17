@@ -22,7 +22,7 @@ cd /D %~dp0
 
 if not exist importwifi.xml (
     echo.
-    call :color_echo . red "importwifi.xml does not exist. Exiting..."
+    call :color_echo . red "importwifi.xml is missing. Exiting..."
     timeout /t 3 >nul
     exit
 )
@@ -568,7 +568,7 @@ goto :eof
                 echo  - wordlist         : Provide a wordlist file
 		echo  - scan             : Performs a WI-FI scan
 		echo  - interface        : Open Interface Management
-		echo  - attack           : Attacks on selected WI-FI
+		echo  - attack           : Attacks selected WI-FI
 		echo.
 		echo  For more informaton, please read "README.md".
 		echo.
