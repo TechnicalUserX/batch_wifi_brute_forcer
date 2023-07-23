@@ -2,11 +2,11 @@
 :: Batch Wi-Fi Brute Forcer - Developed By TechnicalUserX
 :: Please refer to https://github.com/TechnicalUserX for more projects
 
-:: This program is created to be proof of concept that it is possible
+:: This program is created to be a proof of concept that it is possible
 :: to write a working Wi-Fi attack tool with Batchfiles since there 
 :: are countless examples on the internet that claims to be legit
 :: hacking tools, working on CMD. While this tool does not claim
-:: %100 success ratio, it is still working if target Wi-Fi has
+:: a 100% success ratio, it still works if the target Wi-Fi has
 :: weak password. :)
 
 :: There is already a wordlist file in the repository but you are free
@@ -22,7 +22,7 @@ cd /D %~dp0
 
 if not exist importwifi.xml (
     echo.
-    call :color_echo . red "importwifi.xml does not exists, exiting..."
+    call :color_echo . red "importwifi.xml is missing. Exiting..."
     timeout /t 3 >nul
     exit
 )
@@ -345,7 +345,7 @@ goto :mainmenu
     cls
 
     if "!interface_id!" equ "not_defined" (
-        call :color_echo . red "You have to select an interface to perform scan"
+        call :color_echo . red "You have to select an interface to perform a scan"
         set wifi_target=not_defined
         echo.
         echo.
@@ -565,10 +565,10 @@ goto :eof
 		echo.
 		echo.
 		echo  - help             : Displays this page
-        echo  - wordlist         : Provide a wordlist file
+                echo  - wordlist         : Provide a wordlist file
 		echo  - scan             : Performs a WI-FI scan
 		echo  - interface        : Open Interface Management
-		echo  - attack           : Attacks on selected WI-FI
+		echo  - attack           : Attacks selected WI-FI
 		echo.
 		echo  For more informaton, please read "README.md".
 		echo.
