@@ -4,9 +4,9 @@ An online attack tool against Wi-Fi networks with internal CMD commands.
 ## Usage
 
 ### 1) Interface initialization
-Program automatically detects your wireless interfaces when you execute the batchfile.
+The program automatically detects your wireless interfaces when you execute the batch file.
 If it finds only one, it will select it as default. If there are multiple interfaces,
-program will ask you to choose one. If none exists, it will stay "not_defined".
+the program will ask you to choose one. If none exist, it will stay "not_defined".
 
 > You can later change the interface by typing `interface` on the main menu.
 > This will bring the interface initialization screen back.
