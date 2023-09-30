@@ -22,8 +22,16 @@ associated with an SSID.
 You have to specify the wordlist file you are going to use by typing `wordlist` on the 
 main menu. You can provide a file which is relatively positioned in the program directory
 or you can give full path.
+> You don't have to specify a wordlist file if you have a default wordlist.
 
-### 4) Attacking
+### 4) Selecting a default wordlist
+You can specify a default wordlist by changing the value
+set by `set wordlist_file=` on line 40 in bruteforcer.cmd. You can provide a file 
+which is relatively positioned in the program directory or you can give full path. 
+This way, you will not need to specify a wordlist file every time you open the program.
+> If the default wordlist is invalid, it will automatically ask you for a wordlist.
+
+### 5) Attacking
 Simply type `attack` and program will show you a warning screen that this process is going
 to delete the profile associated with the SSID if you have connected to it before.
 It means you will lose the password you entered while connecting to that SSID before.
@@ -32,7 +40,6 @@ Save it before using the attack.
 ## Limitations
 - This program is created for Windows 10 and 11. Since some commands may differ in terms of output between Windows versions,
 it is not expected to work on previous versions.
-
 
 - Speed is significantly slow due to its nature.
 
