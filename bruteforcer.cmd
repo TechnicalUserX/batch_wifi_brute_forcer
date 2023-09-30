@@ -39,6 +39,11 @@ set wifi_target=not_defined
 
 set wordlist_file=not_defined
 
+if "!wordlist_file!" neq "not_defined" (
+  if not exist !wordlist_file! (
+     call :wordlist
+   )
+)
 
 :program_entry
     call :interface_init
