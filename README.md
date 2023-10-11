@@ -26,7 +26,7 @@ or you can give full path.
 
 ### 4) Selecting a default wordlist
 You can specify a default wordlist by changing the value
-set by `set wordlist_file=` on line 40 in bruteforcer.cmd. You can provide a file 
+inside of DefaultWordlist.txt. You can provide a file 
 which is relatively positioned in the program directory or you can give full path. 
 This way, you will not need to specify a wordlist file every time you open the program.
 > If you see the wordlist selection menu when you open the program, it means that the default wordlist is invalid.
