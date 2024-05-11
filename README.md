@@ -38,8 +38,7 @@ It means you will lose the password you entered while connecting to that SSID be
 Save it before using the attack.
 
 ## Limitations
-- This program is created for Windows 10 and 11. Since some commands may differ in terms of output between Windows versions,
-it is not expected to work on previous versions.
+- This program has been tested unsuccessfully on Windows 7 and tested successfully on Windows 10 and 11. Since some commands may differ in terms of output between Windows versions, it is not expected to work on previous versions.
 
 - Speed is significantly slow due to its nature.
 
