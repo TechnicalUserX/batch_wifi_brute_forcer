@@ -22,17 +22,23 @@ associated with an SSID.
 You have to specify the wordlist file you are going to use by typing `wordlist` on the 
 main menu. You can provide a file which is relatively positioned in the program directory
 or you can give full path.
+> You don't have to specify a wordlist file if you have a default wordlist.
 
-### 4) Attacking
+### 4) Selecting a default wordlist
+You can specify a default wordlist by changing the value
+inside of DefaultWordlist.txt. You can provide a file 
+which is relatively positioned in the program directory or you can give full path. 
+This way, you will not need to specify a wordlist file every time you open the program.
+> If you see the wordlist selection menu when you open the program, it means that the default wordlist is invalid.
+
+### 5) Attacking
 Simply type `attack` and program will show you a warning screen that this process is going
 to delete the profile associated with the SSID if you have connected to it before.
 It means you will lose the password you entered while connecting to that SSID before.
 Save it before using the attack.
 
 ## Limitations
-- This program is created for Windows 10 and 11. Since some commands may differ in terms of output between Windows versions,
-it is not expected to work on previous versions.
-
+- This program has been tested unsuccessfully on Windows 7 and tested successfully on Windows 10 and 11. Since some commands may differ in terms of output between Windows versions, it is not expected to work on previous versions.
 
 - Speed is significantly slow due to its nature.
 
