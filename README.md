@@ -40,6 +40,8 @@ Save it before using the attack.
 ## Limitations
 - This program has been tested unsuccessfully on Windows 7 and tested successfully on Windows 10 and 11. Since some commands may differ in terms of output between Windows versions, it is not expected to work on previous versions.
 
+- This program uses ANSI escape sequences in the terminal which was added to the Windows Console in the Windows 10 version 1511, previous versions are not expected to run this program.
+
 - Speed is significantly slow due to its nature.
 
 - Cannot attack hidden networks.
