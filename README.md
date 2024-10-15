@@ -1,5 +1,5 @@
 # Batch Wi-Fi Brute Forcer
-An online attack tool against Wi-Fi networks with internal CMD commands.
+An active attack tool against Wi-Fi networks with internal CMD commands.
 
 ## Usage
 
