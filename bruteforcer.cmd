@@ -625,27 +625,27 @@ goto :eof
 
 
 :help
-		cls
-		echo.
-		call :color_echo . cyan "Commands"
-		echo.
-		echo.
-		echo  - help             : Displays this page
-        echo  - wordlist         : Provide a wordlist file
-		echo  - scan             : Performs a WI-FI scan
-		echo  - interface        : Open Interface Management
-		echo  - attack           : Attacks selected WI-FI
-        echo  - counter          : Sets the attack counter
-        echo  - exit             : Close the program
-		echo.
-		echo  For more informaton, please refer to "README.md".
-		echo.
-		echo  More projects from TechnicalUserX:
-        echo  https://github.com/TechnicalUserX
-		echo.
-		echo.
-		echo Press any key to continue...
-		pause >nul
+	cls
+	echo.
+	call :color_echo . cyan "Commands"
+	echo.
+	echo.
+	echo  - help             : Displays this page
+	echo  - wordlist         : Provide a wordlist file
+	echo  - scan             : Performs a WI-FI scan
+	echo  - interface        : Open Interface Management
+	echo  - attack           : Attacks selected WI-FI
+	echo  - counter          : Sets the attack counter
+	echo  - exit             : Close the program
+	echo.
+	echo  For more information, please refer to "README.md".
+	echo.
+	echo  More projects from TechnicalUserX:
+	echo  https://github.com/TechnicalUserX
+	echo.
+	echo.
+	echo Press any key to continue...
+	pause >nul
 
 goto :eof
 
