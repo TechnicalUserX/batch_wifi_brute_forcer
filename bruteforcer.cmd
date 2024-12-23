@@ -17,7 +17,6 @@ setlocal enabledelayedexpansion
 title Batch Wi-Fi Brute Forcer
 color 0f
 
-:: Enable UTF-8
 cd /D %~dp0
 
 if not exist importwifi.xml (
