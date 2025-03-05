@@ -23,6 +23,10 @@ if exist "importwifi.xml" (
     del importwifi.xml
 )
 
+where wmic 1>nul 2>nul
+if %errorlevel% equ 1 (
+    call :exit_fatal "'wmic' command is not accessible from CMD. Please enable the Windows feature to access 'wmic'"
+)
 
 :: Interface Variables
 set interface_number=0
@@ -39,6 +43,7 @@ if not exist "wordlist.txt" (
 ) else (
     set wordlist_file=wordlist.txt
 )
+
 
 :program_entry
     call :interface_init
